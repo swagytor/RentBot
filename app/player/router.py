@@ -3,7 +3,7 @@ from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
-from app.player.models import Players
+from app.player.models import Player
 from app.player.schemas import SPlayer
 
 router = APIRouter(
@@ -14,7 +14,7 @@ router = APIRouter(
 
 @router.post("/")
 async def create_player(new_palayer: SPlayer, se: AsyncSession = Depends(get_async_session), ):
-    new_palayer = insert(Players).values(**new_palayer.model_dump())
+    new_palayer = insert(Player).values(**new_palayer.model_dump())
     await se.execute(new_palayer)
     await se.commit()
     return {"status": "success"}
