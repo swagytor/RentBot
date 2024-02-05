@@ -1,14 +1,10 @@
-from datetime import date
+from datetime import datetime
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 
 
 class SEvent(BaseModel):
-
     description: str = Field(max_length=100, min_length=1)
-    # TODO переделать на datetime
-    start_time: date
-    finish_time: date
+    start_time: datetime
+    finish_time: datetime
     court: int
-    # TODO убрать player
-    player: int
