@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, Date
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -14,3 +14,4 @@ class Event(Base):
     finish_time: Mapped[datetime] = mapped_column(Date)
     court: Mapped[int] = mapped_column(ForeignKey("court.id"))
     description: Mapped[str]
+    event: Mapped[list["EventPlayer"]] = relationship("EventPlayer", back_populates="event")
