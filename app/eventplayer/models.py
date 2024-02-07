@@ -19,3 +19,7 @@ class EventPlayer(Base):
     event_id: Mapped[int] = mapped_column(ForeignKey("event.id"))
     player: Mapped["Player"] = relationship(back_populates="player")
     event: Mapped["Event"] = relationship(back_populates="event")
+
+
+    def __str__(self):
+        return f"{self.player} - {self.event}"
