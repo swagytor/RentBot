@@ -16,11 +16,15 @@ class PlayerAdmin(ModelView, model=Player):
                    Player.is_notification,
                    Player.is_notification_changes]
 
+    icon = "fa fa-user"
+
 
 class CourtAdmin(ModelView, model=Court):
     column_list = [Court.id,
                    Court.name,
                    Court.address]
+
+    icon = "fa fa-map-marker"
 
 
 class EventAdmin(ModelView, model=Event):
@@ -29,6 +33,8 @@ class EventAdmin(ModelView, model=Event):
                    Event.finish_time,
                    Event.court,
                    Event.description]
+
+    icon = "fa fa-calendar"
 
 
 # class EventPlayerAdmin(ModelView, model=EventPlayer):
