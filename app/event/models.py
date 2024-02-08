@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Date
+from sqlalchemy import ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -17,8 +17,8 @@ class Event(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     court_id = mapped_column(ForeignKey("court.id"))
     player_id = mapped_column(ForeignKey("player.id"))
-    start_time: Mapped[datetime] = mapped_column(Date)
-    finish_time: Mapped[datetime] = mapped_column(Date)
+    start_time: Mapped[datetime] = mapped_column(DateTime)
+    finish_time: Mapped[datetime] = mapped_column(DateTime)
     description: Mapped[str]
 
     player: Mapped["Player"] = relationship(back_populates="event")
