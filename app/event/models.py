@@ -25,4 +25,4 @@ class Event(Base):
     court: Mapped["Court"] = relationship(back_populates="event")
 
     def __str__(self):
-        return f"{self.start_time} - {self.finish_time} - {self.court} - {self.description} - {self.player}"
+        return f"{self.start_time} - {self.finish_time} - {self.description} - {self.id}"
