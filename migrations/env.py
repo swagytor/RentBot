@@ -13,7 +13,7 @@ from app.config import settings
 from app.database import Base
 from app.player.models import Player
 from app.event.models import Event
-from app.eventplayer.models import EventPlayer
+# from app.eventplayer.models import EventPlayer
 from app.court.models import Court
 
 # this is the Alembic Config object, which provides

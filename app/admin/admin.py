@@ -2,7 +2,7 @@ from sqladmin import ModelView
 
 from app.court.models import Court
 from app.event.models import Event
-from app.eventplayer.models import EventPlayer
+# from app.eventplayer.models import EventPlayer
 from app.player.models import Player
 
 
@@ -31,7 +31,7 @@ class EventAdmin(ModelView, model=Event):
                    Event.description]
 
 
-class EventPlayerAdmin(ModelView, model=EventPlayer):
-    column_list = [EventPlayer.id,
-                   EventPlayer.player_id,
-                   EventPlayer.event_id]
+# class EventPlayerAdmin(ModelView, model=EventPlayer):
+#     column_list = [EventPlayer.id,
+#                    EventPlayer.player_id,
+#                    EventPlayer.event_id]

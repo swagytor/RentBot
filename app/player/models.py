@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.event.models import Event
 
 
 class Player(Base):
@@ -14,7 +19,8 @@ class Player(Base):
     games_played_on_week: Mapped[int] = mapped_column(default=0)
     is_notification: Mapped[bool] = mapped_column(default=False)
     is_notification_changes: Mapped[bool] = mapped_column(default=False)
-    player: Mapped[list["EventPlayer"]] = relationship("EventPlayer", back_populates="player")
+
+    event: Mapped[list["Event"]] = relationship(back_populates="player")
 
     def __str__(self):
         return f"{self.name} - {self.ntrp} - {self.tg_id} - {self.tg_username} - {self.games_played_on_week} - " \
