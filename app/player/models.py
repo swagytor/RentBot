@@ -17,4 +17,5 @@ class Player(Base):
     player: Mapped[list["EventPlayer"]] = relationship("EventPlayer", back_populates="player")
 
     def __str__(self):
-        return f'{self.name} - {self.tg_id} - {self.tg_username} - {self.games_played_on_week}'
+        return f"{self.name} - {self.ntrp} - {self.tg_id} - {self.tg_username} - {self.games_played_on_week} - " \
+               f"{self.is_notification} - {self.is_notification_changes}"
