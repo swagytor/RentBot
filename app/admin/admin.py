@@ -32,6 +32,7 @@ class EventAdmin(ModelView, model=Event):
                    Event.start_time,
                    Event.finish_time,
                    Event.court,
+                   Event.player,
                    Event.description]
 
     icon = "fa fa-calendar"

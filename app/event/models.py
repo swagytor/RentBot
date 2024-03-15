@@ -21,8 +21,9 @@ class Event(Base):
     finish_time: Mapped[datetime] = mapped_column(DateTime)
     description: Mapped[str]
 
-    player: Mapped["Player"] = relationship(back_populates="event")
-    court: Mapped["Court"] = relationship(back_populates="event")
+    player: Mapped[list["Player"]] = relationship()
+    court: Mapped["Court"] = relationship()
+
 
     def __str__(self):
         return f"{self.start_time} - {self.finish_time} - {self.description} - {self.id}"

@@ -20,7 +20,7 @@ class Player(Base):
     is_notification: Mapped[bool] = mapped_column(default=False)
     is_notification_changes: Mapped[bool] = mapped_column(default=False)
 
-    event: Mapped[list["Event"]] = relationship(back_populates="player")
+    # event: Mapped["Event"] = relationship(viewonly=True)
 
     def __str__(self):
         return f"{self.name} - {self.ntrp} - {self.tg_id} - {self.tg_username} - {self.games_played_on_week} - " \

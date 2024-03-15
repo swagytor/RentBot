@@ -15,7 +15,7 @@ class Court(Base):
     address: Mapped[str]
     name: Mapped[str]
 
-    event: Mapped[list["Event"]] = relationship(back_populates="court")
+    # event: Mapped["Event"] = relationship(back_populates="court", viewonly=True)
 
     def __str__(self):
         return f"{self.address} {self.name[:10]}"
