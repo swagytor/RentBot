@@ -10,10 +10,15 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
+    BOT_TOKEN: str
 
     @property
     def DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+    @property
+    def BOT_TOKEN(self):
+        return self.BOT_TOKEN
 
     class Config:
         env_file = root / ".env"

@@ -1,17 +1,29 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Date
+from sqlalchemy import ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.player.models import Player
+    from app.court.models import Court
 
 
 class Event(Base):
     __tablename__ = "event"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    start_time: Mapped[datetime] = mapped_column(Date)
-    finish_time: Mapped[datetime] = mapped_column(Date)
-    court: Mapped[int] = mapped_column(ForeignKey("court.id"))
+    court_id = mapped_column(ForeignKey("court.id"))
+    player_id = mapped_column(ForeignKey("player.id"))
+    start_time: Mapped[datetime] = mapped_column(DateTime)
+    finish_time: Mapped[datetime] = mapped_column(DateTime)
     description: Mapped[str]
-    event: Mapped[list["EventPlayer"]] = relationship("EventPlayer", back_populates="event")
+
+    player: Mapped[list["Player"]] = relationship()
+    court: Mapped["Court"] = relationship()
+
+
+    def __str__(self):
+        return f"{self.start_time} - {self.finish_time} - {self.description} - {self.id}"
