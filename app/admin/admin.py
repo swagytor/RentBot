@@ -2,14 +2,13 @@ from sqladmin import ModelView
 
 from app.court.models import Court
 from app.event.models import Event
-# from app.eventplayer.models import EventPlayer
 from app.player.models import Player
 
 
 class PlayerAdmin(ModelView, model=Player):
     column_list = [Player.id,
                    Player.name,
-                   Player.ntrp,
+                   Player.NTRP,
                    Player.tg_id,
                    Player.tg_username,
                    Player.games_played_on_week,
@@ -36,9 +35,3 @@ class EventAdmin(ModelView, model=Event):
                    Event.description]
 
     icon = "fa fa-calendar"
-
-
-# class EventPlayerAdmin(ModelView, model=EventPlayer):
-#     column_list = [EventPlayer.id,
-#                    EventPlayer.player_id,
-#                    EventPlayer.event_id]
