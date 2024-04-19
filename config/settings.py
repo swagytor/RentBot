@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'drf_spectacular',
+
+    'courts.apps.CourtsConfig',
+    'players.apps.PlayersConfig',
+    'events.apps.EventsConfig',
 ]
 
 MIDDLEWARE = [
