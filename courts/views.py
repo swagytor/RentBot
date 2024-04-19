@@ -1,3 +1,7 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from courts.models import Court
+from courts.serializers import CourtSerializer
 
-# Create your views here.
+class CourtViewSet(viewsets.ModelViewSet):
+    queryset = Court.objects.all()
+    serializer_class = CourtSerializer
