@@ -9,7 +9,7 @@ from app.court.router import router as court_router
 from app.event.router import router as event_router
 # from app.eventplayer.router import router as eventplayer_router
 
-app = FastAPI()
+app = FastAPI(swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"})
 admin = Admin(app, engine)
 
 admin.add_view(CourtAdmin)

@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -15,7 +15,7 @@ class Player(Base):
     is_notification: Mapped[bool] = mapped_column(default=False)
     is_notification_changes: Mapped[bool] = mapped_column(default=False)
 
-    # event: Mapped["Event"] = relationship(viewonly=True)
+    events = relationship("Event", secondary="event_player", back_populates="players")
 
     def __str__(self):
         return f"{self.name} - {self.NTRP} - {self.tg_id} - {self.tg_username} - {self.games_played_on_week} - " \

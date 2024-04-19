@@ -5,6 +5,7 @@ from sqlalchemy import ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+from app.eventplayer.models import EventPlayer
 
 if TYPE_CHECKING:
     from app.player.models import Player
@@ -21,8 +22,8 @@ class Event(Base):
     finish_time: Mapped[datetime] = mapped_column(DateTime)
     description: Mapped[str]
 
-    player: Mapped[list["Player"]] = relationship()
-    court: Mapped["Court"] = relationship()
+    players: Mapped["EventPlayer"] = relationship("Player", secondary="event_player", back_populates="events")
+    court: Mapped["Court"] = relationship("Court")
 
 
     def __str__(self):

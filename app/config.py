@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASS: str
     DB_NAME: str
-    # BOT_TOKEN: str
+    BOT_TOKEN: str
+    BASE_URL: str
 
     @property
     def DATABASE_URL(self):
@@ -19,6 +20,10 @@ class Settings(BaseSettings):
     @property
     def BOT_TOKEN(self):
         return self.BOT_TOKEN
+
+    @property
+    def BASE_URL(self):
+        return self.BASE_URL
 
     class Config:
         env_file = root / ".env"
