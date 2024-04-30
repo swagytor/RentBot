@@ -25,7 +25,8 @@ async def set_name(message: types.Message, state: FSMContext):
 
     await message.bot.send_message(tg_user.id, f"Приятно познакомиться, {message.text}!")
 
-    await message.bot.send_message(tg_user.id, "Теперь укажи свой NTRP-рейтинг")
+    await message.bot.send_message(tg_user.id, "Теперь укажи свой NTRP-рейтинг",
+                                   reply_markup=types.ReplyKeyboardRemove())
     await state.set_state(RegistrationsState.ntrp)
 
 
@@ -39,7 +40,7 @@ async def set_ntrp(message: types.Message, state: FSMContext):
     player.ntrp = message.text
     player.asave()
 
-    await message.bot.send_message(tg_user.id, f"Спасибо за регистрацию, {message.text}!")
+    await message.bot.send_message(tg_user.id, f"Спасибо за регистрацию, {player.name}!")
 
     await state.set_state()
     await basic.main_menu(message)

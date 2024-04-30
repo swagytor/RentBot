@@ -14,7 +14,7 @@ from aiogram.dispatcher.dispatcher import Dispatcher
 from aiogram.filters.command import CommandStart
 from django.conf import settings
 
-from telegram.handlers import basic, registration
+from telegram.handlers import basic, registration, events
 from telegram.services.commands import set_commands
 from telegram.states.registration import RegistrationsState
 
@@ -33,6 +33,8 @@ async def start():
     dp.message.register(registration.set_ntrp, RegistrationsState.ntrp)
 
     dp.message.register(basic.main_menu, F.text == "Главное меню")
+
+    dp.message.register(events.my_events, F.text == "🥎Мои игры🥎")
 
     try:
         await dp.start_polling(bot)
