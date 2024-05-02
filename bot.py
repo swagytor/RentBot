@@ -5,6 +5,8 @@ from aiogram import F
 from aiogram3_calendar.calendar_types import SimpleCalendarCallback
 from telegram_bot_calendar import DetailedTelegramCalendar
 
+from telegram.states.events import EventState
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
@@ -41,7 +43,13 @@ async def start():
     dp.message.register(events.create_event, F.text == '🎾Записаться🎾')
 
     # dp.callback_query.register(events.cal, F.func(DetailedTelegramCalendar().func()))
-    dp.callback_query.register(events.select_date, SimpleCalendarCallback.filter())
+
+    dp.message.register(events.select_date, EventState.select_court)
+    dp.callback_query.register(events.set_date, SimpleCalendarCallback.filter())
+    dp.callback_query.register(events.set_start_time, EventState.select_start_time)
+    dp.callback_query.register(events.select_end_time, EventState.select_end_time)
+    dp.callback_query.register(events.confirm_event, EventState.create_event)
+
     try:
         await dp.start_polling(bot)
         await set_commands(bot)

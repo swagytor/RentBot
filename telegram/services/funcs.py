@@ -11,6 +11,21 @@ def get_fullname_keyboard(fullname):
     ], resize_keyboard=True)
 
 
+def get_user_state_data(state_data, tg_id):
+    state_data.setdefault(f'{tg_id}', {})
+
+    return state_data
+
+
+def get_court_keyboard(courts):
+    keyboard = types.ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True, one_time_keyboard=True)
+
+    for court in courts:
+        keyboard.keyboard.append([types.KeyboardButton(text=court['title'])])
+
+    return keyboard
+
+
 def get_event_duration(start, end):
     result = []
 
@@ -21,12 +36,26 @@ def get_event_duration(start, end):
     return result
 
 
-def get_inlined_date_keyboard(dates):
-    print(dates)
-    result = []
-    current_time = datetime.strptime("07:00", "%H:%M")
+def get_max_duration(selected_time, time_list):
+    max_time = datetime.strptime(selected_time, "%H:%M")
 
-    for time in dates:
+    for time in time_list:
+        time = datetime.strptime(time, "%H:%M")
+
+        if time < max_time:
+            continue
+        elif time == max_time:
+            max_time += timedelta(minutes=15)
+        else:
+            # max_time = max_time.strftime("%H:%M")
+            return max_time
+
+
+def get_inlined_date_keyboard(times, start_time='07:00'):
+    result = []
+    current_time = datetime.strptime(start_time, "%H:%M")
+
+    for time in times:
         time = datetime.strptime(time, "%H:%M")
 
         while current_time < time:
@@ -41,21 +70,26 @@ def get_inlined_date_keyboard(dates):
 
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=[])
 
-    print(result)
-
     for i in range(0, len(result), 4):
         buttons = []
-        if result[i:i+4] == [' ', ' ', ' ', ' ']:
+        if result[i:i + 4] == [' ', ' ', ' ', ' ']:
             continue
-        for j in result[i:i+4]:
+        for j in result[i:i + 4]:
             buttons.append(types.InlineKeyboardButton(text=j, callback_data=j))
 
         keyboard.inline_keyboard.append(buttons)
 
+    return keyboard
 
-    # inline = [result[i:i+4] for i in range(0, len(result), 4)]
-    # keyboad = types.InlineKeyboardMarkup(inline_keyboard=inline)
-    # for date, ind in enumerate(dates, 1):
-    #     dates[ind] = types.InlineKeyboardButton(text=date, callback_data=date)
+
+def get_available_periods_keyboard(times):
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[])
+
+    for i in range(0, len(times), 4):
+        buttons = []
+        for j in times[i:i + 4]:
+            buttons.append(types.InlineKeyboardButton(text=j, callback_data=j))
+
+        keyboard.inline_keyboard.append(buttons)
 
     return keyboard
