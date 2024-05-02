@@ -2,6 +2,8 @@ import os
 
 import django
 from aiogram import F
+from aiogram3_calendar.calendar_types import SimpleCalendarCallback
+from telegram_bot_calendar import DetailedTelegramCalendar
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
@@ -34,8 +36,12 @@ async def start():
 
     dp.message.register(basic.main_menu, F.text == "Главное меню")
 
-    dp.message.register(events.my_events, F.text == "🥎Мои игры🥎")
+    dp.message.register(events.my_events, F.text == "⚔Мои игры⚔")
+    dp.message.register(events.all_events, F.text == '📜Все игры📜')
+    dp.message.register(events.create_event, F.text == '🎾Записаться🎾')
 
+    # dp.callback_query.register(events.cal, F.func(DetailedTelegramCalendar().func()))
+    dp.callback_query.register(events.select_date, SimpleCalendarCallback.filter())
     try:
         await dp.start_polling(bot)
         await set_commands(bot)
