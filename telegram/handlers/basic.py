@@ -29,4 +29,4 @@ async def start(message: types.Message, state):
 
 
 async def main_menu(message: types.Message):
-    await message.bot.send_message(message.from_user.id, "Главное меню", reply_markup=basic.main_menu_keyboard)
+    await message.answer("Главное меню", reply_markup=basic.main_menu_keyboard)

@@ -1,4 +1,7 @@
+from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework import viewsets
+
+from events.filters import EventFilter
 from events.models import Event
 from events.serializers import EventSerializer
 from rest_framework.decorators import action
@@ -10,16 +13,14 @@ from rest_framework import filters
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    filter_backends = [filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    filterset_class = EventFilter
 
     ordering_fields = ['start_date', 'end_date']
+    filterset_fields = ['start_date', 'end_date', 'court', 'player']
 
     def list(self, request, *args, **kwargs):
-        court = self.request.query_params.get('court')
-        if court == 'all':
-            queryset = self.get_queryset()
-        else:
-            queryset = self.get_queryset().filter(court_id=court)
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

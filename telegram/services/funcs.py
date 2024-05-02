@@ -38,6 +38,7 @@ def get_event_duration(start, end):
 
 def get_max_duration(selected_time, time_list):
     max_time = datetime.strptime(selected_time, "%H:%M")
+    max_time += timedelta(minutes=15)
 
     for time in time_list:
         time = datetime.strptime(time, "%H:%M")
@@ -46,9 +47,8 @@ def get_max_duration(selected_time, time_list):
             continue
         elif time == max_time:
             max_time += timedelta(minutes=15)
-        else:
-            # max_time = max_time.strftime("%H:%M")
-            return max_time
+    return max_time
+
 
 
 def get_inlined_date_keyboard(times, start_time='07:00'):

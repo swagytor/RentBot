@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta
 
 import requests
@@ -6,8 +5,6 @@ from aiogram import types
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram3_calendar import SimpleCalendar
-from django.utils import timezone
-from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 
 from courts.models import Court
 from telegram.handlers.basic import main_menu
@@ -145,31 +142,31 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
     interval = timedelta(minutes=15)
 
     date_periods = []
-    event_period = []
-    current_date = start_period
+    current_time = start_period
 
-    while current_date < end_period:
-        date_periods.append(current_date.strftime('%H:%M'))
-        current_date += interval
+    while current_time < end_period:
+        date_periods.append(current_time.strftime('%H:%M'))
+        current_time += interval
 
     events = requests.get('http://127.0.0.1:8000/api/events/',
-                          params={'court': court}
-                          # params={'start_date__date': callback_data['date']}
+                          params={'court': court,
+                                  'start_date': date.strftime('%Y-%m-%d'),
+                                  },
                           )
 
+    # events = sync_to_async(Event.objects.filter)(court_id=court, start_date__date=date.strftime('%Y-%m-%d'))
     if events.status_code == 200:
-        events = events.json()
-        if events:
-            for event in events:
-                start_time = datetime.strptime(event['start_date'], '%d.%m.%Y %H:%M')
-                end_time = datetime.strptime(event['end_date'], '%d.%m.%Y %H:%M')
+        for event in events.json():
+            start_time = datetime.strptime(event['start_date'], '%d.%m.%Y %H:%M')
+            end_time = datetime.strptime(event['end_date'], '%d.%m.%Y %H:%M')
 
-                event_duration = get_event_duration(start_time, end_time)
+            # start_time = event.start_date
+            # end_time = event.end_date
 
-                for time in event_duration:
-                    date_periods.remove(time)
+            event_duration = get_event_duration(start_time, end_time)
 
-                event_period.append(start_time.strftime('%H:%M'))
+            for time in event_duration:
+                date_periods.remove(time)
 
         sorted_events = [date for date in sorted(date_periods, key=lambda x: datetime.strptime(x, '%H:%M'))]
 

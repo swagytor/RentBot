@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'drf_spectacular',
+    'django_filters',
 
     'courts.apps.CourtsConfig',
     'players.apps.PlayersConfig',
