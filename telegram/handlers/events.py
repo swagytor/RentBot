@@ -116,7 +116,7 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
                 f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
             # await state.set_state(EventState.select_court)
             await create_event(callback_query.message, state)
-        elif is_user_limit_expired(callback_query.from_user.id, date):
+        elif await is_user_limit_expired(callback_query.from_user.id, date):
             await callback_query.message.answer(
                 "Превышен лимит ваших игр на этой неделе."
             )
