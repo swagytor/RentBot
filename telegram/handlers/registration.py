@@ -21,13 +21,16 @@ async def set_name(message: types.Message, state: FSMContext):
     if not message.text:
         return await message.bot.send_message(message.from_user.id, "Пожалуйста, введите свое имя")
     tg_user = message.from_user
-    await Player.objects.acreate(tg_id=tg_user.id, name=message.text)
+    player = await Player.objects.acreate(tg_id=tg_user.id, name=message.text)
 
-    await message.bot.send_message(tg_user.id, f"Приятно познакомиться, {message.text}!")
+    state_data = await state.get_data()
+    state_data['id'] = player.id
+    await state.set_data(state_data)
 
-    await message.bot.send_message(tg_user.id, "Теперь укажи свой NTRP-рейтинг",
-                                   reply_markup=types.ReplyKeyboardRemove())
-    await state.set_state(RegistrationsState.ntrp)
+    await message.bot.send_message(tg_user.id, f"Приятно познакомиться, {message.text}!", reply_markup=types.ReplyKeyboardRemove())
+
+    await state.set_state()
+    await basic.main_menu(message)
 
 
 async def set_ntrp(message: types.Message, state: FSMContext):
@@ -39,8 +42,11 @@ async def set_ntrp(message: types.Message, state: FSMContext):
 
     state_data = await state.get_data()
     state_data['id'] = player.id
+    await state.set_data(state_data)
+
     player.ntrp = message.text
-    player.asave()
+
+    await player.asave()
 
     await message.bot.send_message(tg_user.id, f"Спасибо за регистрацию, {player.name}!")
 
