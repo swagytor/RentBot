@@ -29,9 +29,7 @@ async def start(message: types.Message, state):
         await start_register(message, state)
 
 
-async def main_menu(message: types.Message, state: FSMContext):
-    await state.set_state()
-
+async def main_menu(message: types.Message):
     await message.answer("Главное меню", reply_markup=basic.main_menu_keyboard)
 
 
