@@ -17,7 +17,6 @@ from telegram.states.registration import RegistrationsState
 from aiogram import F
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram3_calendar.calendar_types import SimpleCalendarCallback
-from config.settings import REDIS_ADDRESS
 from telegram.states.events import EventState
 
 
