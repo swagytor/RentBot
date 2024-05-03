@@ -1,6 +1,9 @@
 from datetime import timedelta, datetime
 
 from aiogram import types
+from asgiref.sync import sync_to_async
+
+from events.models import Event
 
 
 def get_fullname_keyboard(fullname):
@@ -54,7 +57,6 @@ def get_max_duration(selected_time, time_list):
     return selected_time
 
 
-
 def get_inlined_date_keyboard(times, start_time='07:00'):
     result = []
     current_time = datetime.strptime(start_time, "%H:%M")
@@ -97,3 +99,12 @@ def get_available_periods_keyboard(times):
         keyboard.inline_keyboard.append(buttons)
 
     return keyboard
+
+
+@sync_to_async
+def is_user_limit_expired(tg_id, date):
+    start_week = date - timedelta(days=date.weekday())
+    end_week = start_week + timedelta(days=7)
+    events = Event.objects.filter(player__tg_id=tg_id, start_date__range=[start_week, end_week])
+
+    return events.count() >= 2

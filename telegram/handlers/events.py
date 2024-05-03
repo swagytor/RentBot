@@ -9,7 +9,7 @@ from aiogram3_calendar import SimpleCalendar
 from courts.models import Court
 from telegram.handlers.basic import main_menu
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
-    get_available_periods_keyboard
+    get_available_periods_keyboard, is_user_limit_expired
 from telegram.states.events import EventState
 
 
@@ -71,6 +71,7 @@ async def all_events(message: types.Message):
 #     await message.bot.send_message(message.from_user.id, "Выберите дату", reply_markup=calendar)
 
 async def create_event(message: types.Message, state: FSMContext):
+
     courts = requests.get('http://127.0.0.1:8000/api/courts/').json()
 
     keyboard = get_court_keyboard(courts)
@@ -115,6 +116,11 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
                 f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
             # await state.set_state(EventState.select_court)
             await create_event(callback_query.message, state)
+        elif is_user_limit_expired(callback_query.from_user.id, date):
+            await callback_query.message.answer(
+                "Превышен лимит ваших игр на этой неделе."
+            )
+            return await main_menu(callback_query.message)
         else:
             date = date.strftime('%d.%m.%Y')
             await callback_query.message.answer(f"Вы выбрали дату: {date}")
