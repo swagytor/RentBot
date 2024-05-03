@@ -212,6 +212,7 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
 async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
 
+    state_data['end_time'] = callback_query.data
     date = datetime.strptime(state_data['selected_date'], '%d.%m.%Y')
     start_time = datetime.strptime(state_data['start_time'], "%H:%M")
     end_time = datetime.strptime(callback_query.data, "%H:%M")
@@ -227,7 +228,9 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
     })
 
     if event.status_code == 201:
-        await callback_query.message.answer("Событие создано")
+        await callback_query.message.answer(f"Отлично вы записались на {state_data['selected_court']} корт\n"
+                                            f"Время начала: {state_data['start_time']}\n"
+                                            f"Время окончания: {state_data['end_time']}")
         await state.set_state()
 
         await main_menu(callback_query.message)
