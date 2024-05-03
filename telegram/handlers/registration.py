@@ -37,6 +37,8 @@ async def set_ntrp(message: types.Message, state: FSMContext):
     tg_user = message.from_user
     player = await Player.objects.aget(tg_id=tg_user.id)
 
+    state_data = await state.get_data()
+    state_data['id'] = player.id
     player.ntrp = message.text
     player.asave()
 

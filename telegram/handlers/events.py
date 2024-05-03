@@ -5,6 +5,7 @@ from aiogram import types
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram3_calendar import SimpleCalendar
+from asgiref.sync import sync_to_async
 
 from courts.models import Court
 from telegram.handlers.basic import main_menu
@@ -40,27 +41,82 @@ async def my_events(message: types.Message):
         await message.bot.send_message(message.from_user.id, "Произошла ошибка при получении данных. Попробуйте позже.")
 
 
-async def all_events(message: types.Message):
-    response = requests.get('http://127.0.0.1:8000/api/events/',
-                            params={'ordering': 'start_date'})
+async def all_events(message: types.Message, state: FSMContext):
+    calendar = SimpleCalendar()
 
-    if response.status_code == 200:
-        response = response.json()
+    await state.set_state(EventState.select_all_events_date)
+    await message.answer(
+        "Выберите дату:",
+        reply_markup=await calendar.start_calendar()
+    )
 
-        await message.bot.send_message(message.from_user.id, "Все игры:")
 
-        for event in response:
-            date, start_time = event['start_date'].split()
-            _, end_time = event['end_date'].split()
+# async def select_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
+#     calendar = SimpleCalendar()
 
-            text = (f"Дата: {date}\n"
-                    f"Время: {start_time} - {end_time}\n"
-                    f"Корт: {event['_court']}\n")
 
-            await message.bot.send_message(message.from_user.id, text)
+async def select_all_events_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    calendar = SimpleCalendar()
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+    if selected:
+        today = datetime.now().date()
+        next_week = today + timedelta(days=7)
+        if not today <= date.date() <= next_week:
+            await callback_query.message.answer(
+                f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
+            # await state.set_state(EventState.select_court)
+            await all_events(callback_query.message, state)
+        else:
+            await callback_query.message.answer(f"Вы выбрали дату: {date.strftime('%d.%m.%Y')}")
+
+            courts = await sync_to_async(Court.objects.all)()
+            # courts =  courts
+
+            result = []
+            text = ''
+
+            async for court in courts:
+                text += f"Корт: {court.title}\n"
+
+                response = requests.get('http://127.0.0.1:8000/api/events/',
+                                        params={
+                                            'start_date': f'{date.strftime("%Y-%m-%d")}',
+                                            'court': court.id,
+                                            'ordering': 'start_date'
+                                        })
+
+                if response.status_code == 200:
+                    if response.json():
+                        for event in response.json():
+                            _, start_time = event['start_date'].split()
+                            _, end_time = event['end_date'].split()
+                            text += (f"{start_time}-{end_time} {event['_player']}\n")
+                    else:
+                        text += "В этот день нет активных игр\n"
+
+                text += '\n'
+
+            await callback_query.message.answer(f'<b>Расписание игр на {date.strftime("%d.%m.%Y")}:</b>\n\n'
+                                                f'{text}')
+
+            # await callback_query.message.answer("Все игры:")
+
+            # if not response:
+            #     await callback_query.message.answer("В этот день нет активных игр")
+            #     await main_menu(callback_query.message)
+
+            # for event in response:
+            #     date, start_time = event['start_date'].split()
+            #     _, end_time = event['end_date'].split()
+            #
+            #     text = (f"Дата: {date}\n"
+            #             f"Время: {start_time} - {end_time}\n"
+            #             f"Корт: {event['_court']}\n")
+            #
+            #     await callback_query.message.answer(text)
 
     else:
-        await message.bot.send_message(message.from_user.id, "Произошла ошибка при получении данных. Попробуйте позже.")
+        await callback_query.message.answer("Произошла ошибка при получении данных. Попробуйте позже.")
 
 
 # async def create_event(message: types.Message):
@@ -71,7 +127,6 @@ async def all_events(message: types.Message):
 #     await message.bot.send_message(message.from_user.id, "Выберите дату", reply_markup=calendar)
 
 async def create_event(message: types.Message, state: FSMContext):
-
     courts = requests.get('http://127.0.0.1:8000/api/courts/').json()
 
     keyboard = get_court_keyboard(courts)
@@ -94,12 +149,13 @@ async def select_date(message: types.Message, state: FSMContext):
         await state.set_data(state_data)
 
         calendar = SimpleCalendar()
-        # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
 
+        await state.set_state(EventState.select_date)
         await message.answer(
             "Выберите дату:",
             reply_markup=await calendar.start_calendar()
         )
+
 
     except Court.DoesNotExist:
         await message.answer("Выберите корт из списка")
@@ -173,7 +229,6 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
         state_data['available_times'] = sorted_events
         await state.set_data(state_data)
-
 
         inlined_date = get_inlined_date_keyboard(sorted_events)
 

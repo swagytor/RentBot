@@ -1,6 +1,7 @@
 import os
 
 import django
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
@@ -16,7 +17,7 @@ from telegram.services.commands import set_commands
 from telegram.states.registration import RegistrationsState
 from aiogram import F
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram3_calendar.calendar_types import SimpleCalendarCallback
+from aiogram3_calendar.calendar_types import SimpleCalendarCallback, DialogCalendarCallback
 from telegram.states.events import EventState
 
 
@@ -31,6 +32,8 @@ async def start():
     dp = Dispatcher(storage=storage)
 
     dp.message.register(basic.start, CommandStart())
+    # dp.message.register(basic.test, F.text == "/test")
+
     dp.message.register(registration.start_register, RegistrationsState.start)
     dp.message.register(registration.set_name, RegistrationsState.name)
     dp.message.register(registration.set_ntrp, RegistrationsState.ntrp)
@@ -39,19 +42,20 @@ async def start():
 
     dp.message.register(events.my_events, F.text == "⚔Мои игры⚔")
     dp.message.register(events.all_events, F.text == '📜Все игры📜')
-    dp.message.register(events.create_event, F.text == '🎾Записаться🎾')
+    dp.callback_query.register(events.select_all_events_date, EventState.select_all_events_date, SimpleCalendarCallback.filter())
 
     # dp.callback_query.register(events.cal, F.func(DetailedTelegramCalendar().func()))
 
+    dp.message.register(events.create_event, F.text == '🎾Записаться🎾')
     dp.message.register(events.select_date, EventState.select_court)
-    dp.callback_query.register(events.set_date, SimpleCalendarCallback.filter())
+    dp.callback_query.register(events.set_date, EventState.select_date, SimpleCalendarCallback.filter())
     dp.callback_query.register(events.set_start_time, EventState.select_start_time)
     dp.callback_query.register(events.select_end_time, EventState.select_end_time)
     dp.callback_query.register(events.confirm_event, EventState.create_event)
 
     try:
-        await dp.start_polling(bot)
         await set_commands(bot)
+        await dp.start_polling(bot)
     finally:
         await bot.session.close()
 

@@ -7,6 +7,10 @@ async def set_commands(bot: Bot):
         BotCommand(
             command='start',
             description='Запустить бота'
+        ),
+        BotCommand(
+            command='test',
+            description='Тестовая команда'
         )
     ]
 
