@@ -105,8 +105,12 @@ def get_available_periods_keyboard(times):
 @sync_to_async
 def is_user_limit_expired(tg_id, date):
     player = Player.objects.get(tg_id=tg_id)
+
+    if player.is_premium:
+        return False
+
     start_week = date - timedelta(days=date.weekday())
     end_week = start_week + timedelta(days=7)
     events = Event.objects.filter(player__tg_id=tg_id, start_date__range=[start_week, end_week])
 
-    return not player.is_premium or events.count() >= 2
+    return events.count() >= 2
