@@ -1,12 +1,6 @@
 import os
 
 import django
-from aiogram import F
-from aiogram3_calendar.calendar_types import SimpleCalendarCallback
-from telegram_bot_calendar import DetailedTelegramCalendar
-
-from telegram.states.events import EventState
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
@@ -17,10 +11,14 @@ from aiogram.client.bot import Bot
 from aiogram.dispatcher.dispatcher import Dispatcher
 from aiogram.filters.command import CommandStart
 from django.conf import settings
-
 from telegram.handlers import basic, registration, events
 from telegram.services.commands import set_commands
 from telegram.states.registration import RegistrationsState
+from aiogram import F
+from aiogram.fsm.storage.redis import RedisStorage
+from aiogram3_calendar.calendar_types import SimpleCalendarCallback
+from config.settings import REDIS_ADDRESS
+from telegram.states.events import EventState
 
 
 async def start():
@@ -29,7 +27,9 @@ async def start():
 
     bot = Bot(token=settings.BOT_TOKEN, parse_mode='HTML')
 
-    dp = Dispatcher()
+    storage = RedisStorage.from_url('redis://localhost:6379/0')
+
+    dp = Dispatcher(storage=storage)
 
     dp.message.register(basic.start, CommandStart())
     dp.message.register(registration.start_register, RegistrationsState.start)

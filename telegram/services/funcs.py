@@ -37,17 +37,21 @@ def get_event_duration(start, end):
 
 
 def get_max_duration(selected_time, time_list):
-    max_time = datetime.strptime(selected_time, "%H:%M")
-    max_time += timedelta(minutes=15)
+    selected_time = datetime.strptime(selected_time, "%H:%M")
+    max_time = selected_time + timedelta(hours=2)
+    selected_time += timedelta(minutes=15)
 
     for time in time_list:
         time = datetime.strptime(time, "%H:%M")
 
-        if time < max_time:
+        if selected_time == max_time:
+            break
+        elif time < selected_time:
             continue
-        elif time == max_time:
-            max_time += timedelta(minutes=15)
-    return max_time
+        elif time == selected_time:
+            selected_time += timedelta(minutes=15)
+
+    return selected_time
 
 
 

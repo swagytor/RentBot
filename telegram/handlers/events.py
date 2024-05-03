@@ -81,34 +81,31 @@ async def create_event(message: types.Message, state: FSMContext):
 
 async def select_date(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
-    print(state_data)
-    user_data = state_data[f'{message.from_user.id}']
+    try:
+        court = await Court.objects.aget(title=message.text)
 
-    court = await Court.objects.aget(title=message.text)
-    court = court.id
-    await message.answer(
-        f'Выбран корт "{message.text}"',
-        reply_markup=types.ReplyKeyboardRemove()
-    )
+        await message.answer(
+            f'Выбран корт "{message.text}"',
+            reply_markup=types.ReplyKeyboardRemove()
+        )
 
-    user_data.update({
-        'selected_court': court
-    })
+        state_data['selected_court'] = court.id
+        await state.set_data(state_data)
 
-    await state.set_data(state_data)
+        calendar = SimpleCalendar()
+        # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
 
-    calendar = SimpleCalendar()
-    # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
+        await message.answer(
+            "Выберите дату:",
+            reply_markup=await calendar.start_calendar()
+        )
 
-    await message.answer(
-        "Выберите дату:",
-        reply_markup=await calendar.start_calendar()
-    )
+    except Court.DoesNotExist:
+        await message.answer("Выберите корт из списка")
 
 
 async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
     calendar = SimpleCalendar()
-    # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
     selected, date = await calendar.process_selection(callback_query, callback_data)
     if selected:
         today = datetime.now().date()
@@ -119,12 +116,11 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
             # await state.set_state(EventState.select_court)
             await create_event(callback_query.message, state)
         else:
-            await callback_query.message.answer(f"Вы выбрали дату: {date.strftime('%d.%m.%Y')}")
-            state_data = await state.get_data()
-            state_data[f'{callback_query.from_user.id}'].update({
-                'selected_date': date,
-            })
+            date = date.strftime('%d.%m.%Y')
+            await callback_query.message.answer(f"Вы выбрали дату: {date}")
 
+            state_data = await state.get_data()
+            state_data['selected_date'] = date
             await state.set_data(state_data)
 
             await state.set_state(EventState.select_start_time)
@@ -132,10 +128,9 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
 
 
 async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    user_data = data[f'{callback_query.from_user.id}']
-    date = user_data['selected_date']
-    court = user_data['selected_court']
+    state_data = await state.get_data()
+    date = datetime.strptime(state_data['selected_date'], '%d.%m.%Y')
+    court = state_data['selected_court']
 
     start_period = date.replace(hour=7, minute=0, second=0, microsecond=0)
     end_period = date.replace(hour=22, minute=0, second=0, microsecond=0)
@@ -170,8 +165,9 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
         sorted_events = [date for date in sorted(date_periods, key=lambda x: datetime.strptime(x, '%H:%M'))]
 
-        user_data['available_times'] = sorted_events
-        await state.update_data(data)
+        state_data['available_times'] = sorted_events
+        await state.set_data(state_data)
+
 
         inlined_date = get_inlined_date_keyboard(sorted_events)
 
@@ -184,20 +180,16 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
 async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
-    user_data = state_data[f'{callback_query.from_user.id}']
 
     start_time = callback_query.data
 
     if start_time != ' ':
         await callback_query.message.answer(f"Вы выбрали время {start_time}")
 
-        user_data.update({
-            'start_time': start_time
-        })
+        state_data['start_time'] = start_time
         await state.set_data(state_data)
 
-        available_times = user_data['available_times']
-
+        available_times = state_data['available_times']
         max_time = get_max_duration(start_time, available_times)
 
         available_periods = []
@@ -219,10 +211,9 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
 
 async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
-    user_data = state_data[f'{callback_query.from_user.id}']
 
-    date = user_data['selected_date']
-    start_time = datetime.strptime(user_data['start_time'], "%H:%M")
+    date = datetime.strptime(state_data['selected_date'], '%d.%m.%Y')
+    start_time = datetime.strptime(state_data['start_time'], "%H:%M")
     end_time = datetime.strptime(callback_query.data, "%H:%M")
 
     start_date = date.replace(hour=start_time.hour, minute=start_time.minute, second=0, microsecond=0)
@@ -231,8 +222,8 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
     event = requests.post('http://127.0.0.1:8000/api/events/', data={
         'start_date': start_date,
         'end_date': end_date,
-        'court': user_data['selected_court'],
-        'player': user_data['id']
+        'court': state_data['selected_court'],
+        'player': state_data['id']
     })
 
     if event.status_code == 201:
