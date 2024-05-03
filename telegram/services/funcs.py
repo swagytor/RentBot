@@ -18,7 +18,8 @@ def get_user_state_data(state_data, tg_id):
 
 
 def get_court_keyboard(courts):
-    keyboard = types.ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True, one_time_keyboard=True)
+    keyboard = types.ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True, one_time_keyboard=True,
+                                         input_field_placeholder="Выберите Корт", selective=True)
 
     for court in courts:
         keyboard.keyboard.append([types.KeyboardButton(text=court['title'])])
