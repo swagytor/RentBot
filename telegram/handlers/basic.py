@@ -2,9 +2,7 @@ from aiogram import types
 
 from players.models import Player
 from telegram.buttons import basic
-from telegram.custom_calendar.app import CustomCalendar
 from telegram.handlers.registration import start_register
-from telegram.services.funcs import get_user_state_data
 from telegram.states.registration import RegistrationsState
 
 
