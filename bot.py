@@ -41,6 +41,8 @@ async def start():
     dp.message.register(basic.main_menu, F.text == "Главное меню")
 
     dp.message.register(events.my_events, F.text == "⚔Мои игры⚔")
+    dp.callback_query.register(events.cancel_event, F.data.startswith('cancel_event'))
+
     dp.message.register(events.all_events, F.text == '📜Все игры📜')
     dp.callback_query.register(events.select_all_events_date, EventState.select_all_events_date, SimpleCalendarCallback.filter())
 
@@ -55,7 +57,7 @@ async def start():
 
     try:
         await set_commands(bot)
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, skip_updates=True)
     finally:
         await bot.session.close()
 

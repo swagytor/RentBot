@@ -33,12 +33,29 @@ async def my_events(message: types.Message):
                         f"Время: {start_time} - {end_time}\n"
                         f"Корт: {event['_court']}\n")
 
-                await message.bot.send_message(message.from_user.id, text)
+                inline_keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+                    [types.InlineKeyboardButton(text="Отменить", callback_data=f"cancel_event_{event['id']}")]
+                ], resize_keyboard=True)
+
+                await message.bot.send_message(message.from_user.id, text, reply_markup=inline_keyboard)
         else:
             await message.bot.send_message(message.from_user.id, "У вас нет активных игр")
 
     else:
         await message.bot.send_message(message.from_user.id, "Произошла ошибка при получении данных. Попробуйте позже.")
+
+
+async def cancel_event(callback_query: types.CallbackQuery):
+    *_, event_id = callback_query.data.split('_')
+
+    response = requests.delete(f'http://127.0.0.1:8000/api/events/{event_id}/')
+
+    if response.status_code == 204:
+        await callback_query.message.answer("Игра отменена")
+    else:
+        await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
+
+    await main_menu(callback_query.message)
 
 
 async def all_events(message: types.Message, state: FSMContext):
@@ -167,7 +184,7 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
     if selected:
         today = datetime.now().date()
         next_week = today + timedelta(days=7)
-        if not today <= date.date() < next_week:
+        if not today <= date.date() <= next_week:
             await callback_query.message.answer(
                 f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
             # await state.set_state(EventState.select_court)

@@ -1,4 +1,5 @@
 from aiogram import types
+from aiogram.fsm.context import FSMContext
 
 from players.models import Player
 from telegram.buttons import basic
@@ -28,7 +29,9 @@ async def start(message: types.Message, state):
         await start_register(message, state)
 
 
-async def main_menu(message: types.Message):
+async def main_menu(message: types.Message, state: FSMContext):
+    await state.set_state()
+
     await message.answer("Главное меню", reply_markup=basic.main_menu_keyboard)
 
 
