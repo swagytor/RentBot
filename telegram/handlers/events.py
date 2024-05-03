@@ -235,8 +235,11 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
 
     if event.status_code == 201:
         await callback_query.message.answer(f"Отлично вы записались на {state_data['selected_court']} корт\n"
+                                            f"Дата: {state_data['selected_date']}\n"
                                             f"Время начала: {state_data['start_time']}\n"
-                                            f"Время окончания: {state_data['end_time']}")
+                                            f"Время окончания: {state_data['end_time']}\n"
+                                            f"Хорошей игры!")
+
         await state.set_state()
 
         await main_menu(callback_query.message)
