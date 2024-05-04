@@ -304,24 +304,31 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
     start_date = date.replace(hour=start_time.hour, minute=start_time.minute, second=0, microsecond=0)
     end_date = date.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0)
 
-    event = requests.post('http://127.0.0.1:8000/api/events/', data={
-        'start_date': start_date,
-        'end_date': end_date,
-        'court': state_data['selected_court'],
-        'player': state_data['id']
-    })
+    try:
+        event = await Event.objects.acreate(
+            start_date=start_date,
+            end_date=end_date,
+            court_id=state_data['selected_court'],
+            player_id=state_data['id']
+        )
+    #event = requests.post('http://127.0.0.1:8000/api/events/', data={
+     #   'start_date': start_date,
+      #  'end_date': end_date,
+       # 'court': state_data['selected_court'],
+        #'player': state_data['id']
+    #})
 
-    if event.status_code == 201:
-        await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт\n"
-                                            f"Дата: {state_data['selected_date']}\n"
-                                            f"Время начала: {state_data['start_time']}\n"
-                                            f"Время окончания: {state_data['end_time']}\n"
-                                            "Хорошей игры!")
+        if event:
+            await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт\n"
+                                                f"Дата: {state_data['selected_date']}\n"
+                                                f"Время начала: {state_data['start_time']}\n"
+                                                f"Время окончания: {state_data['end_time']}\n"
+                                                "Хорошей игры!")
 
         await state.set_state()
 
         await main_menu(callback_query.message)
-    else:
+    except Exception as e:
         await callback_query.message.answer("Произошла ошибка при создании события. Попробуйте позже.")
 
 # async def cal(c: types.CallbackQuery):
