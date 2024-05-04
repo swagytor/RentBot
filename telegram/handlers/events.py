@@ -6,8 +6,9 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram3_calendar import SimpleCalendar
 from asgiref.sync import sync_to_async
-
+from django.utils import timezone
 from courts.models import Court
+from events.models import Event
 from telegram.handlers.basic import main_menu
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
     get_available_periods_keyboard, is_user_limit_expired
@@ -48,7 +49,13 @@ async def my_events(message: types.Message):
 async def cancel_event(callback_query: types.CallbackQuery):
     *_, event_id = callback_query.data.split('_')
 
-    response = requests.delete(f'http://127.0.0.1:8000/api/events/{event_id}/')
+    event = await Event.objects.aget(id=event_id)
+
+    if event.start_date < timezone.now():
+        await callback_query.message.answer("Нельзя отменить прошедшую игру")
+        return await main_menu(callback_query.message)
+
+    response = requests.delete(f'http://127.0.0.1:8000/api/events/{event_id}')
 
     if response.status_code == 204:
         await callback_query.message.answer("Игра отменена")
