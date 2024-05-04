@@ -46,6 +46,24 @@ async def my_events(message: types.Message):
         await message.bot.send_message(message.from_user.id, "Произошла ошибка при получении данных. Попробуйте позже.")
 
 
+# async def cancel_event(callback_query: types.CallbackQuery):
+#     *_, event_id = callback_query.data.split('_')
+#
+#     event = await Event.objects.aget(id=event_id)
+#
+#     if event.start_date < timezone.now():
+#         await callback_query.message.answer("Нельзя отменить прошедшую игру")
+#         return await main_menu(callback_query.message)
+#
+#     response = requests.delete(f'http://127.0.0.1:8000/api/events/{event_id}')
+#
+#     if response.status_code == 204:
+#         await callback_query.message.answer("Игра отменена")
+#     else:
+#         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
+#
+#     await main_menu(callback_query.message)
+
 async def cancel_event(callback_query: types.CallbackQuery):
     *_, event_id = callback_query.data.split('_')
 
@@ -55,11 +73,10 @@ async def cancel_event(callback_query: types.CallbackQuery):
         await callback_query.message.answer("Нельзя отменить прошедшую игру")
         return await main_menu(callback_query.message)
 
-    response = requests.delete(f'http://127.0.0.1:8000/api/events/{event_id}')
-
-    if response.status_code == 204:
+    try:
+        await sync_to_async(event.delete)()
         await callback_query.message.answer("Игра отменена")
-    else:
+    except Exception as e:
         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
 
     await main_menu(callback_query.message)
