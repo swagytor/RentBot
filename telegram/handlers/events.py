@@ -53,11 +53,11 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     court = await Court.objects.aget(id=event.court_id)
     player = await Player.objects.aget(tg_id=callback_query.from_user.id)
 
-    date_time, start_time = event.start_date.strftime("%Y-%m-%d %H:%M").rsplit()
+    date_time, start_time = event.start_date.strftime("%d-%m-%Y %H:%M").rsplit()
     end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()[1]
 
-    message_text = f"Игрок - {player} отменил игру на {court}e\n" \
-                   f"Дата: {date_time[5:]}\n" \
+    message_text = f"Игрок - {player} отменил(a) игру на {court}e\n" \
+                   f"Дата: {date_time.replace('-', '.')}\n" \
                    f"Время: {start_time} - {end_time}"
 
     if event.start_date < datetime.now():
@@ -67,7 +67,7 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     try:
         await sync_to_async(event.delete)()
         await callback_query.message.answer("Игра отменена")
-        await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255)
+        await bot.send_message(-1002127840587, message_text, reply_to_message_id=5)
     except Exception as e:
         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
 
