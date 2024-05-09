@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-
 import requests
+from bot import Bot
 from aiogram import types
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
@@ -9,6 +9,7 @@ from asgiref.sync import sync_to_async
 from django.utils import timezone
 from courts.models import Court
 from events.models import Event
+from players.models import Player
 from telegram.handlers.basic import main_menu
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
     get_available_periods_keyboard, is_user_limit_expired
@@ -46,10 +47,19 @@ async def my_events(message: types.Message):
         await message.bot.send_message(message.from_user.id, "Произошла ошибка при получении данных. Попробуйте позже.")
 
 
-async def cancel_event(callback_query: types.CallbackQuery):
+async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     *_, event_id = callback_query.data.split('_')
 
     event = await Event.objects.aget(id=event_id)
+    court = await Court.objects.aget(id=event.court_id)
+    player = await Player.objects.aget(tg_id=callback_query.from_user.id)
+
+    date_time, start_time = event.start_date.strftime("%Y-%m-%d %H:%M").rsplit()
+    end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()[1]
+
+    message_text = f"Игрок - {player} отменил игру на {court}e\n" \
+                   f"Дата: {date_time[5:]}\n" \
+                   f"Время: {start_time} - {end_time}"
 
     if event.start_date < timezone.now():
         await callback_query.message.answer("Нельзя отменить прошедшую игру")
@@ -58,6 +68,7 @@ async def cancel_event(callback_query: types.CallbackQuery):
     try:
         await sync_to_async(event.delete)()
         await callback_query.message.answer("Игра отменена")
+        await bot.send_message(-1002127840587, message_text, reply_to_message_id=5)
     except Exception as e:
         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
 
@@ -287,6 +298,7 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
         # user_data['available_periods'] = available_periods
 
         inlined_date = get_available_periods_keyboard(available_periods)
+        # inlined_date.inline_keyboard.append([types.InlineKeyboardButton(text="Назад", callback_data=f"select_end_time")])
 
         await callback_query.message.answer(f"Доступное время для завершения:\n", reply_markup=inlined_date)
 
@@ -311,12 +323,12 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
             court_id=state_data['selected_court'],
             player_id=state_data['id']
         )
-    #event = requests.post('http://127.0.0.1:8000/api/events/', data={
-     #   'start_date': start_date,
-      #  'end_date': end_date,
-       # 'court': state_data['selected_court'],
-        #'player': state_data['id']
-    #})
+        # event = requests.post('http://127.0.0.1:8000/api/events/', data={
+        #   'start_date': start_date,
+        #  'end_date': end_date,
+        # 'court': state_data['selected_court'],
+        # 'player': state_data['id']
+        # })
 
         if event:
             await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт\n"
