@@ -6,7 +6,6 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram3_calendar import SimpleCalendar
 from asgiref.sync import sync_to_async
-from django.utils import timezone
 from courts.models import Court
 from events.models import Event
 from players.models import Player
@@ -61,14 +60,14 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
                    f"Дата: {date_time[5:]}\n" \
                    f"Время: {start_time} - {end_time}"
 
-    if event.start_date < timezone.now():
+    if event.start_date < datetime.now():
         await callback_query.message.answer("Нельзя отменить прошедшую игру")
         return await main_menu(callback_query.message)
 
     try:
         await sync_to_async(event.delete)()
         await callback_query.message.answer("Игра отменена")
-        await bot.send_message(1001599764524, message_text, reply_to_message_id=14255)
+        await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255)
     except Exception as e:
         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
 
