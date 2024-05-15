@@ -5,7 +5,7 @@ from aiogram.types import BotCommand
 async def set_commands(bot: Bot):
     commands = [
         BotCommand(
-            command='starts',
+            command='start',
             description='Запустить бота'
         ),
         BotCommand(
