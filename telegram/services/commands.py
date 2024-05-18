@@ -8,10 +8,10 @@ async def set_commands(bot: Bot):
             command='start',
             description='Запустить бота'
         ),
-        BotCommand(
-            command='test',
-            description='Тестовая команда'
-        )
+        # BotCommand(
+        #     command='test',
+        #     description='Тестовая команда'
+        # )
     ]
 
     await bot.set_my_commands(commands)
