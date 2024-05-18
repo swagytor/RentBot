@@ -265,7 +265,10 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
         inlined_date = get_inlined_date_keyboard(sorted_events)
 
-        await callback_query.message.answer(f"Доступное время:\n", reply_markup=inlined_date)
+        await callback_query.message.answer(f"Доступное время начало игры:\n"
+                                            f"\n"
+                                            f"Окончание игры необходимимо выбрать из окна со врменем ниже под названием - Доступное время для завершения:\n"
+                                            f"Оно появится после выбора времени начала", reply_markup=inlined_date)
 
         await state.set_state(EventState.select_end_time)
     else:
