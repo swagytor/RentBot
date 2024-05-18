@@ -283,8 +283,10 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
         state_data['start_time'] = start_time
         await state.set_data(state_data)
 
+        is_weekend = datetime.strptime(state_data['selected_date'], '%d.%m.%Y').weekday()
+
         available_times = state_data['available_times']
-        max_time = get_max_duration(start_time, available_times)
+        max_time = get_max_duration(start_time, available_times, is_weekend)
 
         available_periods = []
 
