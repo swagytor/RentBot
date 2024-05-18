@@ -43,7 +43,10 @@ def get_event_duration(start, end):
 
 def get_max_duration(selected_time, time_list):
     selected_time = datetime.strptime(selected_time, "%H:%M")
-    max_time = selected_time + timedelta(hours=2)
+    if datetime.weekday:
+        max_time = selected_time + timedelta(hours=1.5)
+    else:
+        max_time = selected_time + timedelta(hours=2)
     selected_time += timedelta(minutes=15)
 
     for time in time_list:
@@ -115,3 +118,17 @@ def is_user_limit_expired(tg_id, date):
     events = Event.objects.filter(player__tg_id=tg_id, start_date__range=[start_week, end_week])
 
     return events.count() >= 2
+
+
+from typing import Union
+
+from aiogram.filters import BaseFilter
+from aiogram.types import Message
+
+
+class ChatTypeFilter(BaseFilter):  # [1]
+
+    async def __call__(self, message: Message) -> bool:  # [3]
+        if message.chat.type == 'private':
+            return True
+        return False
