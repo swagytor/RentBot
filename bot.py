@@ -46,18 +46,18 @@ async def start():
     dp.message.register(registration.set_name, RegistrationsState.name)
     dp.message.register(registration.set_ntrp, RegistrationsState.ntrp)
 
-    dp.message.register(basic.main_menu, F.text == "Главное меню", F.chat.type != 'private')
+    dp.message.register(basic.main_menu, F.text == "Главное меню")
 
-    dp.message.register(events.my_events, F.text == "⚔Мои игры⚔", F.chat.type != 'private')
+    dp.message.register(events.my_events, F.text == "⚔Мои игры⚔")
 
     dp.callback_query.register(events.cancel_event, F.data.startswith('cancel_event'))
 
-    dp.message.register(events.all_events, F.text == '📜Все игры📜', F.chat.type != 'private')
+    dp.message.register(events.all_events, F.text == '📜Все игры📜')
 
     dp.callback_query.register(events.select_all_events_date, EventState.select_all_events_date,
                                SimpleCalendarCallback.filter())
 
-    dp.message.register(events.create_event, F.text == '🎾Записаться🎾', F.chat.type != 'private')
+    dp.message.register(events.create_event, F.text == '🎾Записаться🎾')
 
     dp.message.register(events.select_date, EventState.select_court)
     dp.callback_query.register(events.set_date, EventState.select_date, SimpleCalendarCallback.filter())
