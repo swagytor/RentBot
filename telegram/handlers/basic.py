@@ -32,7 +32,13 @@ async def start(message: types.Message, state):
 async def main_menu(message: types.Message):
     await message.answer("Вы в Главном меню\n"
                          "\n"
-                         "Для отмены/просмотра игр зайдите во вкладку Мои Игры", reply_markup=basic.main_menu_keyboard)
+                         "Для отмены/просмотра игр зайдите во вкладку Мои Игры\n"
+                         "\n"
+                         "Посмотреть расписание всех игр - вкладка Все Игры\n"
+                         "\n"
+                         "Выходные: запись на 2 часа до 9 утра "
+                         "Будни: запись на 2 часа до 14 дня\n"
+                         "В остальное время запись возмонжна только на 1.5 часа", reply_markup=basic.main_menu_keyboard)
 
 
 async def redirect_to_bot(message: types.Message, state: FSMContext):
