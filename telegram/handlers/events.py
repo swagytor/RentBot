@@ -160,9 +160,10 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
 #     await message.bot.send_message(message.from_user.id, "Выберите дату", reply_markup=calendar)
 
 async def create_event(message: types.Message, state: FSMContext):
-    courts = requests.get('http://127.0.0.1:8000/api/courts/').json()
+    courts = await sync_to_async(Court.objects.all)()
+    # courts = requests.get('http://127.0.0.1:8000/api/courts/').json()
 
-    keyboard = get_court_keyboard(courts)
+    keyboard = await get_court_keyboard(courts)
 
     await message.answer("Выберите корт", reply_markup=keyboard)
     await state.set_state(EventState.select_court)
@@ -281,7 +282,7 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
     start_time = callback_query.data
 
     if start_time != ' ':
-        await callback_query.message.answer(f"Вы выбрали время {start_time}")
+        # await callback_query.message.answer(f"Вы выбрали время {start_time}")
 
         state_data['start_time'] = start_time
         await state.set_data(state_data)
@@ -293,18 +294,25 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
 
         available_periods = []
 
-        start_time = datetime.strptime(start_time, "%H:%M")
+        current_time = datetime.strptime(start_time, "%H:%M")
 
-        while start_time < max_time:
-            start_time += timedelta(minutes=15)
-            available_periods.append(start_time.strftime("%H:%M"))
+        while current_time < max_time:
+            current_time += timedelta(minutes=15)
+            available_periods.append(current_time.strftime("%H:%M"))
 
         # user_data['available_periods'] = available_periods
 
         inlined_date = get_available_periods_keyboard(available_periods)
         # inlined_date.inline_keyboard.append([types.InlineKeyboardButton(text="Назад", callback_data=f"select_end_time")])
+        await callback_query.bot.edit_message_text(chat_id=callback_query.message.chat.id,
+                                                   message_id=callback_query.message.message_id,
+                                                   text=f"Вы выбрали время начала игры: {start_time}\n"
+                                                        f"Выберите время окончания игры:")
 
-        await callback_query.message.answer(f"Доступное время для завершения:\n", reply_markup=inlined_date)
+        await callback_query.bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
+                                                           message_id=callback_query.message.message_id,
+                                                           reply_markup=inlined_date)
+        # await callback_query.message.(f"Доступное время для завершения:\n", reply_markup=inlined_date)
 
         await state.set_state(EventState.create_event)
 
