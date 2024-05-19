@@ -17,7 +17,7 @@ from telegram.services.commands import set_commands
 from telegram.states.registration import RegistrationsState
 from aiogram import F
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram3_calendar.calendar_types import SimpleCalendarCallback, DialogCalendarCallback
+from aiogram3_calendar.calendar_types import SimpleCalendarCallback
 from telegram.states.events import EventState
 
 
@@ -32,13 +32,15 @@ async def start():
     dp = Dispatcher(storage=storage)
 
     dp.message.register(basic.redirect_to_bot, F.chat.type != 'private', CommandStart())
+
     dp.message.register(basic.redirect_to_bot, F.chat.type != 'private',
                         F.text.in_(['Главное меню', '⚔Мои игры⚔', '📜Все игры📜', '🎾Записаться🎾']))
+
     dp.callback_query.register(basic.redirect_to_bot_callback, F.state == '*', F.chat.type != 'private')
+
     dp.message.register(basic.start, CommandStart())
 
     dp.message.register(basic.main_menu, F.text == "Главное меню")
-    # dp.message.register(basic.test, F.text == "/test")
 
     dp.message.register(registration.start_register, RegistrationsState.start)
     dp.message.register(registration.set_name, RegistrationsState.name)
@@ -47,15 +49,16 @@ async def start():
     dp.message.register(basic.main_menu, F.text == "Главное меню")
 
     dp.message.register(events.my_events, F.text == "⚔Мои игры⚔")
+
     dp.callback_query.register(events.cancel_event, F.data.startswith('cancel_event'))
 
     dp.message.register(events.all_events, F.text == '📜Все игры📜')
+
     dp.callback_query.register(events.select_all_events_date, EventState.select_all_events_date,
                                SimpleCalendarCallback.filter())
 
-    # dp.callback_query.register(events.cal, F.func(DetailedTelegramCalendar().func()))
-
     dp.message.register(events.create_event, F.text == '🎾Записаться🎾')
+
     dp.message.register(events.select_date, EventState.select_court)
     dp.callback_query.register(events.set_date, EventState.select_date, SimpleCalendarCallback.filter())
     dp.callback_query.register(events.set_start_time, EventState.select_start_time)
