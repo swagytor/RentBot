@@ -30,17 +30,21 @@ async def start(message: types.Message, state):
 
 
 async def main_menu(message: types.Message):
-    await message.answer("Вы в Главном меню", reply_markup=basic.main_menu_keyboard)
+    await message.answer("Вы в Главном меню\n"
+                         "\n"
+                         "Для отмены/просмотра игр зайдите во вкладку Мои Игры", reply_markup=basic.main_menu_keyboard)
 
 
-async def redirect_to_bot(message: types.Message):
+async def redirect_to_bot(message: types.Message, state: FSMContext):
     bot_name = await message.bot.get_me()
+    await state.set_state(None)
     await message.answer(f'Для записи на корт пишите в личку бота @{bot_name.username}',
                          reply_markup=types.ReplyKeyboardRemove())
 
 
-async def redirect_to_bot_callback(call: types.CallbackQuery):
+async def redirect_to_bot_callback(call: types.CallbackQuery, state: FSMContext):
     bot_name = await call.bot.get_me()
+    await state.set_state(None)
     await call.message.answer(f'Для записи на корт пишите в личку бота @{bot_name.username}',
                               reply_markup=types.ReplyKeyboardRemove())
 

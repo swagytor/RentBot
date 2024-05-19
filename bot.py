@@ -31,8 +31,10 @@ async def start():
 
     dp = Dispatcher(storage=storage)
 
-    dp.message.register(basic.redirect_to_bot, F.chat.type != 'private')
-    # dp.callback_query.register(basic.redirect_to_bot_callback, F.state == '*', F.chat.type != 'private')
+    dp.message.register(basic.redirect_to_bot, F.chat.type != 'private', CommandStart())
+    dp.message.register(basic.redirect_to_bot, F.chat.type != 'private',
+                        F.text.in_(['Главное меню', '⚔Мои игры⚔', '📜Все игры📜', '🎾Записаться🎾']))
+    dp.callback_query.register(basic.redirect_to_bot_callback, F.state == '*', F.chat.type != 'private')
     dp.message.register(basic.start, CommandStart())
 
     dp.message.register(basic.main_menu, F.text == "Главное меню")
