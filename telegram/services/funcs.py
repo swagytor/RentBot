@@ -45,9 +45,9 @@ def get_event_duration(start, end):
 def get_max_duration(selected_time, time_list, is_weekend, start_time):
     selected_time = datetime.strptime(selected_time, "%H:%M")
     hours, minutes = start_time.split(':')
-    if is_weekend in (5, 6) and int(hours) <= 9:
-        max_time = selected_time + timedelta(hours=2)
-    elif (is_weekend in (5, 6) and int(hours) > 9) or (is_weekend in (0, 1, 2, 3, 4) and int(hours) > 13):
+    if is_weekend in (5, 6) and (int(hours) > 9 or int(hours) == 9 and int(minutes) > 15):
+        max_time = selected_time + timedelta(hours=1.5)
+    elif is_weekend in (0, 1, 2, 3, 4) and int(hours) > 13:
         max_time = selected_time + timedelta(hours=1.5)
     else:
         max_time = selected_time + timedelta(hours=2)
