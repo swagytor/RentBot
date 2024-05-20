@@ -38,7 +38,11 @@ async def main_menu(message: types.Message):
                          "\n"
                          "Выходные: запись на 2 часа до 9 утра "
                          "Будни: запись на 2 часа до 14 дня\n"
-                         "В остальное время запись возможна только на 1.5 часа", reply_markup=basic.main_menu_keyboard)
+                         "В остальное время запись возможна только на 1.5 часа\n"
+                         "\n"
+                         "У каждого участника есть возможность записаться только два раза в неделю, "
+                         "неделя считается с понедельника по воскресенье\n",
+                         reply_markup=basic.main_menu_keyboard)
 
 
 async def redirect_to_bot(message: types.Message, state: FSMContext):
