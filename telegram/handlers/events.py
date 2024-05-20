@@ -192,6 +192,7 @@ async def select_date(message: types.Message, state: FSMContext):
 
 
     except Court.DoesNotExist:
+        await state.set_state(None)
         await message.answer("Выберите корт из списка")
 
 
