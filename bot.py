@@ -40,6 +40,7 @@ async def start():
 
     dp.message.register(basic.start, CommandStart())
 
+    dp.message.register(basic.about, F.text == "/about")
     dp.message.register(basic.main_menu, F.text == "Главное меню", F.chat.type == 'private')
 
     dp.message.register(registration.start_register, RegistrationsState.start)
