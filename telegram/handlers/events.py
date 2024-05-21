@@ -129,7 +129,7 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
 
                             player_id = event['player']
                             player = await Player.objects.aget(id=player_id)
-                            text += (f"{start_time}-{end_time} @{player.tg_username}\n")
+                            text += (f"{start_time}-{end_time} @{player.tg_username if player.tg_username else player.name}\n")
                     else:
                         text += "В этот день нет активных игр\n"
 
