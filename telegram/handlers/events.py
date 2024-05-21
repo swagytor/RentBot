@@ -58,9 +58,14 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     date_time, start_time = event.start_date.strftime("%d-%m-%Y %H:%M").rsplit()
     end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()[1]
 
-    message_text = f"Игрок - @{player.tg_username} отменил(a) игру на {court}e\n" \
-                   f"Дата: {date_time.replace('-', '.')}\n" \
-                   f"Время: {start_time} - {end_time}"
+    if player.tg_username:
+        message_text = f"Игрок - @{player.tg_username} отменил(a) игру на {court}e\n" \
+                       f"Дата: {date_time.replace('-', '.')}\n" \
+                       f"Время: {start_time} - {end_time}"
+    else:
+        message_text = f"Игрок - {player.name} отменил(a) игру на {court}e\n" \
+                       f"Дата: {date_time.replace('-', '.')}\n" \
+                       f"Время: {start_time} - {end_time}"
 
     if event.start_date < datetime.now():
         await callback_query.message.answer("Нельзя отменить прошедшую игру")
@@ -129,7 +134,10 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
 
                             player_id = event['player']
                             player = await Player.objects.aget(id=player_id)
-                            text += (f"{start_time}-{end_time} @{player.tg_username if player.tg_username else player.name}\n")
+                            if player.tg_username:
+                                text += f"{start_time}-{end_time} @{player.tg_username}\n"
+                            else:
+                                text += f"{start_time}-{end_time} {player.name}\n"
                     else:
                         text += "В этот день нет активных игр\n"
 
