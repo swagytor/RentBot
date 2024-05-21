@@ -12,9 +12,10 @@ async def start(message: types.Message, state):
 
     try:
         player = await Player.objects.aget(tg_id=tg_user.id)
-
+        tg_username = await get_player_tg_username(message)
         state_data = await state.get_data()
         state_data['id'] = player.id
+        state_data['tg_username'] = tg_username
         await state.set_data(state_data)
 
         await main_menu(message)
@@ -75,6 +76,18 @@ async def redirect_to_bot_callback(call: types.CallbackQuery, state: FSMContext)
     await state.set_state(None)
     await call.message.answer(f'Для записи на корт пишите в личку бота @{bot_name.username}',
                               reply_markup=types.ReplyKeyboardRemove())
+
+
+async def get_player_tg_username(message: types.Message):
+    tg_id = message.from_user.id
+    player = await Player.objects.aget(tg_id=tg_id)
+
+    if not player.tg_username or player.tg_username != message.from_user.username:
+        player.tg_username = message.from_user.username
+        await player.asave()
+
+    return message.from_user.username
+
 
 # async def test(message: types.Message):
 #     calendar = CustomCalendar()

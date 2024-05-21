@@ -9,13 +9,15 @@ from asgiref.sync import sync_to_async
 from courts.models import Court
 from events.models import Event
 from players.models import Player
-from telegram.handlers.basic import main_menu
+from telegram.handlers.basic import main_menu, get_player_tg_username
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
     get_available_periods_keyboard, is_user_limit_expired
 from telegram.states.events import EventState
 
 
 async def my_events(message: types.Message):
+
+    tg_username = await get_player_tg_username(message)
     response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
                             params={'tg_id': message.from_user.id,
                                     'ordering': 'start_date'})
@@ -56,7 +58,7 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     date_time, start_time = event.start_date.strftime("%d-%m-%Y %H:%M").rsplit()
     end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()[1]
 
-    message_text = f"Игрок - {player} отменил(a) игру на {court}e\n" \
+    message_text = f"Игрок - @{player.tg_username} отменил(a) игру на {court}e\n" \
                    f"Дата: {date_time.replace('-', '.')}\n" \
                    f"Время: {start_time} - {end_time}"
 
@@ -67,7 +69,7 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     try:
         await sync_to_async(event.delete)()
         await callback_query.message.answer("Игра отменена")
-        await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255)
+        await bot.send_message(-1002127840587, message_text, reply_to_message_id=5)
     except Exception as e:
         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
 
@@ -76,6 +78,7 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
 
 async def all_events(message: types.Message, state: FSMContext):
     calendar = SimpleCalendar()
+    tg_username = await get_player_tg_username(message)
 
     await state.set_state(EventState.select_all_events_date)
     await message.answer(
@@ -123,7 +126,10 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
                         for event in response.json():
                             _, start_time = event['start_date'].split()
                             _, end_time = event['end_date'].split()
-                            text += (f"{start_time}-{end_time} {event['_player']}\n")
+
+                            player_id = event['player']
+                            player = await Player.objects.aget(id=player_id)
+                            text += (f"{start_time}-{end_time} @{player.tg_username}\n")
                     else:
                         text += "В этот день нет активных игр\n"
 
@@ -161,7 +167,7 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
 
 async def create_event(message: types.Message, state: FSMContext):
     courts = await sync_to_async(Court.objects.all)()
-    # courts = requests.get('http://127.0.0.1:8000/api/courts/').json()
+    tg_username = await get_player_tg_username(message)
 
     keyboard = await get_court_keyboard(courts)
 
