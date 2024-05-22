@@ -18,8 +18,8 @@ async def start_register(message: types.Message, state: FSMContext):
 
 
 async def set_name(message: types.Message, state: FSMContext):
-    if not message.text:
-        return await message.bot.send_message(message.from_user.id, "Пожалуйста, введите свое имя")
+    if not message.text or len(message.text) > 24:
+        return await message.bot.send_message(message.from_user.id, "Пожалуйста, введите свое имя, оно должно содержать не более 24 символов")
     tg_user = message.from_user
     player = await Player.objects.acreate(tg_id=tg_user.id, name=message.text)
 
