@@ -73,7 +73,7 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     try:
         await sync_to_async(event.delete)()
         await callback_query.message.answer("Игра отменена")
-        await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255)
+        await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255, disable_web_page_preview=True)
     except Exception as e:
         await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
 
