@@ -16,7 +16,6 @@ from telegram.states.events import EventState
 
 
 async def my_events(message: types.Message):
-
     tg_username = await get_player_tg_username(message)
     response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
                             params={'tg_id': message.from_user.id,
@@ -59,7 +58,7 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()[1]
 
     if player.tg_username:
-        message_text = f"Игрок - @{player.tg_username} отменил(a) игру на {court}e\n" \
+        message_text = f"Игрок - <a href='https://telegram.me/{player.tg_username}'>{player.name}</a> отменил(a) игру на {court}e\n" \
                        f"Дата: {date_time.replace('-', '.')}\n" \
                        f"Время: {start_time} - {end_time}"
     else:
@@ -135,7 +134,7 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
                             player_id = event['player']
                             player = await Player.objects.aget(id=player_id)
                             if player.tg_username:
-                                text += f"{start_time}-{end_time} @{player.tg_username}\n"
+                                text += f"{start_time}-{end_time} <a href='https://telegram.me/{player.tg_username}'>{player.name}</a> \n"
                             else:
                                 text += f"{start_time}-{end_time} {player.name}\n"
                     else:
@@ -144,7 +143,7 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
                 text += '\n'
 
             await callback_query.message.answer(f'<b>Расписание игр на {date.strftime("%d.%m.%Y")}:</b>\n\n'
-                                                f'{text}')
+                                                f'{text}', disable_web_page_preview=True)
 
             # await callback_query.message.answer("Все игры:")
 
