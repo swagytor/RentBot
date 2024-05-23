@@ -118,27 +118,37 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
             async for court in courts:
                 text += f"Корт: {court.title}\n"
 
-                response = requests.get('http://127.0.0.1:8000/api/events/',
-                                        params={
-                                            'start_date': f'{date.strftime("%Y-%m-%d")}',
-                                            'court': court.id,
-                                            'ordering': 'start_date'
-                                        })
-
-                if response.status_code == 200:
-                    if response.json():
-                        for event in response.json():
-                            _, start_time = event['start_date'].split()
-                            _, end_time = event['end_date'].split()
-
-                            player_id = event['player']
-                            player = await Player.objects.aget(id=player_id)
-                            if player.tg_username:
-                                text += f"{start_time}-{end_time} <a href='https://telegram.me/{player.tg_username}'>{player.name}</a> \n"
-                            else:
-                                text += f"{start_time}-{end_time} {player.name}\n"
-                    else:
-                        text += "В этот день нет активных игр\n"
+                events = await sync_to_async(Event.objects.filter)(
+                    start_date__date=date.strftime('%Y-%m-%d'),
+                    court=court.id
+                )
+                events = events.order_by('start_date')
+                if await sync_to_async(events.exists)():
+                    async for event in events:
+                        _, start_time = event.start_date.strftime("%d-%m-%Y %H:%M").rsplit()
+                        _, end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()
+                        player_id = event.player_id
+                        # response = requests.get('http://127.0.0.1:8000/api/events/',
+                        #                         params={
+                        #                             'start_date': f'{date.strftime("%Y-%m-%d")}',
+                        #                             'court': court.id,
+                        #                             'ordering': 'start_date'
+                        #                         })
+                        #
+                        # if response.status_code == 200:
+                        #     if response.json():
+                        #         for event in response.json():
+                        #             _, start_time = event['start_date'].split()
+                        #             _, end_time = event['end_date'].split()
+                        #
+                        #             player_id = event['player']
+                        player = await Player.objects.aget(id=player_id)
+                        if player.tg_username:
+                            text += f"{start_time}-{end_time} <a href='https://telegram.me/{player.tg_username}'>{player.name}</a> \n"
+                        else:
+                            text += f"{start_time}-{end_time} {player.name}\n"
+                else:
+                    text += "В этот день нет активных игр\n"
 
                 text += '\n'
 
@@ -250,7 +260,8 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
     current_time = start_period
 
     while current_time < end_period:
-        date_periods.append(current_time.strftime('%H:%M'))
+        if current_time >= datetime.now():
+            date_periods.append(current_time.strftime('%H:%M'))
         current_time += interval
 
     events = requests.get('http://127.0.0.1:8000/api/events/',
