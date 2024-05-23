@@ -253,7 +253,7 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
     court = state_data['selected_court']
 
     start_period = date.replace(hour=7, minute=0, second=0, microsecond=0)
-    end_period = date.replace(hour=22, minute=0, second=0, microsecond=0)
+    end_period = date.replace(hour=23, minute=0, second=0, microsecond=0)
     interval = timedelta(minutes=15)
 
     date_periods = []
@@ -282,7 +282,8 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
             event_duration = get_event_duration(start_time, end_time)
 
             for time in event_duration:
-                date_periods.remove(time)
+                if time in date_periods:
+                    date_periods.remove(time)
 
         sorted_events = [date for date in sorted(date_periods, key=lambda x: datetime.strptime(x, '%H:%M'))]
 
