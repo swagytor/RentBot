@@ -189,13 +189,17 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
 #     await message.bot.send_message(message.from_user.id, "Выберите дату", reply_markup=calendar)
 
 async def create_event(message: types.Message, state: FSMContext):
-    courts = await sync_to_async(Court.objects.all)()
-    tg_username = await get_player_tg_username(message)
+    try:
+        courts = await sync_to_async(Court.objects.all)()
+        tg_username = await get_player_tg_username(message)
 
-    keyboard = await get_court_keyboard(courts)
+        keyboard = await get_court_keyboard(courts)
 
-    await message.answer("Выберите корт", reply_markup=keyboard)
-    await state.set_state(EventState.select_court)
+        await message.answer("Выберите корт", reply_markup=keyboard)
+        await state.set_state(EventState.select_court)
+
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e}")
 
 
 async def select_date(message: types.Message, state: FSMContext):
@@ -270,21 +274,14 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
             date_periods.append(current_time.strftime('%H:%M'))
         current_time += interval
 
-    events = requests.get('http://127.0.0.1:8000/api/events/',
-                          params={'court': court,
-                                  'start_date': date.strftime('%Y-%m-%d'),
-                                  },
-                          )
+    try:
+        events = await sync_to_async(Event.objects.filter)(
+            court_id=court, start_date__date=date.strftime('%Y-%m-%d'),
+        )
 
-    # events = sync_to_async(Event.objects.filter)(court_id=court, start_date__date=date.strftime('%Y-%m-%d'))
-    if events.status_code == 200:
-        for event in events.json():
-            start_time = datetime.strptime(event['start_date'], '%d.%m.%Y %H:%M')
-            end_time = datetime.strptime(event['end_date'], '%d.%m.%Y %H:%M')
-
-            # start_time = event.start_date
-            # end_time = event.end_date
-
+        async for event in events:
+            start_time = datetime.strptime(event.start_date.strftime('%d.%m.%Y %H:%M'), '%d.%m.%Y %H:%M')
+            end_time = datetime.strptime(event.end_date.strftime('%d.%m.%Y %H:%M'), '%d.%m.%Y %H:%M')
             event_duration = get_event_duration(start_time, end_time)
 
             for time in event_duration:
@@ -304,8 +301,10 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
                                             f"Оно появится после выбора времени начала", reply_markup=inlined_date)
 
         await state.set_state(EventState.select_end_time)
-    else:
-        await callback_query.message.answer("Произошла ошибка при получении данных. Попробуйте позже.")
+
+    except Exception as e:
+        await state.set_state(None)
+        await callback_query.message.answer(f"Произошла ошибка при отмене игры. Попробуйте позже {e}.")
 
 
 async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext):
@@ -338,7 +337,7 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
         await callback_query.bot.edit_message_text(chat_id=callback_query.message.chat.id,
                                                    message_id=callback_query.message.message_id,
                                                    text=f"Вы выбрали время начала игры: {start_time}\n"
-                                                        f"Выберите время окончания игры:")
+                                                        f"Доступное время для завершения:")
 
         await callback_query.bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
                                                            message_id=callback_query.message.message_id,
@@ -384,7 +383,7 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
 
         await main_menu(callback_query.message)
     except Exception as e:
-        await callback_query.message.answer("Произошла ошибка при создании события. Попробуйте позже.")
+        await callback_query.message.answer(f"Произошла ошибка при создании события. Попробуйте позже. {e}")
 
 # async def cal(c: types.CallbackQuery):
 #     result, key, step = DetailedTelegramCalendar().process(c.data)
