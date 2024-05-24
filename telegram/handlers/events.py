@@ -17,34 +17,40 @@ from telegram.states.events import EventState
 
 async def my_events(message: types.Message):
     tg_username = await get_player_tg_username(message)
-    response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
-                            params={'tg_id': message.from_user.id,
-                                    'ordering': 'start_date'})
+    # response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
+    #                         params={'tg_id': message.from_user.id,
+    #                                 'ordering': 'start_date'})
+    #
+    # if response.status_code == 200:
+    #     response = response.json()
+    #
+    #     if response:
+    #         await message.bot.send_message(message.from_user.id, "Ваши игры:")
+    #
+    #         for event in response:
+    #             date, start_time = event['start_date'].split()
+    #             _, end_time = event['end_date'].split()
+    events = await sync_to_async(Event.objects.filter)(
+        player__tg_id=message.from_user.id,
+        end_date__gte=datetime.now()
+    )
+    events = events.order_by('start_date')
+    if await sync_to_async(events.exists)():
+        await message.bot.send_message(message.from_user.id, "Ваши игры:")
+        async for event in events:
+            date, start_time = event.start_date.strftime('%d.%m.%Y %H:%M').split()
+            _, end_time = event.end_date.strftime('%d.%m.%Y %H:%M').split()
+            text = (f"Дата: {date}\n"
+                    f"Время: {start_time} - {end_time}\n"
+                    f"Корт: {event.court_id}\n")
 
-    if response.status_code == 200:
-        response = response.json()
+            inline_keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+                [types.InlineKeyboardButton(text="Отменить", callback_data=f"cancel_event_{event.id}")],
+            ], resize_keyboard=True)
 
-        if response:
-            await message.bot.send_message(message.from_user.id, "Ваши игры:")
-
-            for event in response:
-                date, start_time = event['start_date'].split()
-                _, end_time = event['end_date'].split()
-
-                text = (f"Дата: {date}\n"
-                        f"Время: {start_time} - {end_time}\n"
-                        f"Корт: {event['_court']}\n")
-
-                inline_keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-                    [types.InlineKeyboardButton(text="Отменить", callback_data=f"cancel_event_{event['id']}")]
-                ], resize_keyboard=True)
-
-                await message.bot.send_message(message.from_user.id, text, reply_markup=inline_keyboard)
-        else:
-            await message.bot.send_message(message.from_user.id, "У вас нет активных игр")
-
+            await message.bot.send_message(message.from_user.id, text, reply_markup=inline_keyboard)
     else:
-        await message.bot.send_message(message.from_user.id, "Произошла ошибка при получении данных. Попробуйте позже.")
+        await message.bot.send_message(message.from_user.id, "У вас нет активных игр")
 
 
 async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
@@ -170,9 +176,9 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
             #             f"Корт: {event['_court']}\n")
             #
             #     await callback_query.message.answer(text)
-
-    else:
-        await callback_query.message.answer("Произошла ошибка при получении данных. Попробуйте позже.")
+    #
+    # else:
+    #     await callback_query.message.answer("Произошла ошибка при получении данных. Попробуйте позже.")
 
 
 # async def create_event(message: types.Message):
