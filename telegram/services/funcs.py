@@ -26,9 +26,9 @@ async def get_court_keyboard(courts):
                                          input_field_placeholder="Выберите Корт", selective=True)
 
     async for court in courts:
-        # keyboard.keyboard.append([types.KeyboardButton(text=court['title'])])
         keyboard.keyboard.append([types.KeyboardButton(text=court.title)])
 
+    keyboard.keyboard.append([types.KeyboardButton(text="Назад")])
     return keyboard
 
 

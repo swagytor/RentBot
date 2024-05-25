@@ -40,7 +40,7 @@ async def start():
 
     dp.message.register(basic.start, CommandStart())
 
-    dp.message.register(basic.about, F.text == "/about")
+    dp.message.register(basic.about, F.text == "/help")
     dp.message.register(basic.main_menu, F.text == "Главное меню", F.chat.type == 'private')
 
     dp.message.register(registration.start_register, RegistrationsState.start)
@@ -59,7 +59,6 @@ async def start():
                                SimpleCalendarCallback.filter())
 
     dp.message.register(events.create_event, F.text == '🎾Записаться🎾', F.chat.type == 'private')
-
     dp.message.register(events.select_date, EventState.select_court)
     dp.callback_query.register(events.set_date, EventState.select_date, SimpleCalendarCallback.filter())
     dp.callback_query.register(events.set_start_time, EventState.select_start_time)

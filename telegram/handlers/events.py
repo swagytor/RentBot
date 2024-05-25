@@ -190,6 +190,7 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
 
 async def create_event(message: types.Message, state: FSMContext):
     try:
+        state_data = await state.get_data()
         courts = await sync_to_async(Court.objects.all)()
         tg_username = await get_player_tg_username(message)
 
@@ -205,23 +206,27 @@ async def create_event(message: types.Message, state: FSMContext):
 async def select_date(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
     try:
-        court = await Court.objects.aget(title=message.text)
+        if message.text == 'Назад':
+            await message.answer(f'Вы вернулись в главное меню - нажмите /start или /help',
+                                 reply_markup=types.ReplyKeyboardRemove())
+            await state.set_state(EventState.main_menu)
+        else:
+            court = await Court.objects.aget(title=message.text)
+            await message.answer(
+                f'Выбран корт "{message.text}"',
+                reply_markup=types.ReplyKeyboardRemove()
+            )
 
-        await message.answer(
-            f'Выбран корт "{message.text}"',
-            reply_markup=types.ReplyKeyboardRemove()
-        )
+            state_data['selected_court'] = court.id
+            await state.set_data(state_data)
 
-        state_data['selected_court'] = court.id
-        await state.set_data(state_data)
+            calendar = SimpleCalendar()
 
-        calendar = SimpleCalendar()
-
-        await state.set_state(EventState.select_date)
-        await message.answer(
-            "Выберите дату:",
-            reply_markup=await calendar.start_calendar()
-        )
+            await state.set_state(EventState.select_date)
+            await message.answer(
+                "Выберите дату:",
+                reply_markup=await calendar.start_calendar()
+            )
 
 
     except Court.DoesNotExist:
@@ -230,6 +235,7 @@ async def select_date(message: types.Message, state: FSMContext):
 
 
 async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    state_data = await state.get_data()
     calendar = SimpleCalendar()
     selected, date = await calendar.process_selection(callback_query, callback_data)
     if selected:
@@ -309,7 +315,6 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
 async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
-
     start_time = callback_query.data
 
     if start_time != ' ':
@@ -333,7 +338,6 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
         # user_data['available_periods'] = available_periods
 
         inlined_date = get_available_periods_keyboard(available_periods)
-        # inlined_date.inline_keyboard.append([types.InlineKeyboardButton(text="Назад", callback_data=f"select_end_time")])
         await callback_query.bot.edit_message_text(chat_id=callback_query.message.chat.id,
                                                    message_id=callback_query.message.message_id,
                                                    text=f"Вы выбрали время начала игры: {start_time}\n"
