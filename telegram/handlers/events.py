@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import requests
 from bot import Bot
 from aiogram import types
 from aiogram.filters.callback_data import CallbackData
@@ -16,41 +15,44 @@ from telegram.states.events import EventState
 
 
 async def my_events(message: types.Message):
-    tg_username = await get_player_tg_username(message)
-    # response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
-    #                         params={'tg_id': message.from_user.id,
-    #                                 'ordering': 'start_date'})
-    #
-    # if response.status_code == 200:
-    #     response = response.json()
-    #
-    #     if response:
-    #         await message.bot.send_message(message.from_user.id, "Ваши игры:")
-    #
-    #         for event in response:
-    #             date, start_time = event['start_date'].split()
-    #             _, end_time = event['end_date'].split()
-    events = await sync_to_async(Event.objects.filter)(
-        player__tg_id=message.from_user.id,
-        end_date__gte=datetime.now()
-    )
-    events = events.order_by('start_date')
-    if await sync_to_async(events.exists)():
-        await message.bot.send_message(message.from_user.id, "Ваши игры:")
-        async for event in events:
-            date, start_time = event.start_date.strftime('%d.%m.%Y %H:%M').split()
-            _, end_time = event.end_date.strftime('%d.%m.%Y %H:%M').split()
-            text = (f"Дата: {date}\n"
-                    f"Время: {start_time} - {end_time}\n"
-                    f"Корт: {event.court_id}\n")
+    try:
+        tg_username = await get_player_tg_username(message)
+        # response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
+        #                         params={'tg_id': message.from_user.id,
+        #                                 'ordering': 'start_date'})
+        #
+        # if response.status_code == 200:
+        #     response = response.json()
+        #
+        #     if response:
+        #         await message.bot.send_message(message.from_user.id, "Ваши игры:")
+        #
+        #         for event in response:
+        #             date, start_time = event['start_date'].split()
+        #             _, end_time = event['end_date'].split()
+        events = await sync_to_async(Event.objects.filter)(
+            player__tg_id=message.from_user.id,
+            end_date__gte=datetime.now()
+        )
+        events = events.order_by('start_date')
+        if await sync_to_async(events.exists)():
+            await message.bot.send_message(message.from_user.id, "Ваши игры:")
+            async for event in events:
+                date, start_time = event.start_date.strftime('%d.%m.%Y %H:%M').split()
+                _, end_time = event.end_date.strftime('%d.%m.%Y %H:%M').split()
+                text = (f"Дата: {date}\n"
+                        f"Время: {start_time} - {end_time}\n"
+                        f"Корт: {event.court_id}\n")
 
-            inline_keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
-                [types.InlineKeyboardButton(text="Отменить", callback_data=f"cancel_event_{event.id}")],
-            ], resize_keyboard=True)
+                inline_keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+                    [types.InlineKeyboardButton(text="Отменить", callback_data=f"cancel_event_{event.id}")],
+                ], resize_keyboard=True)
 
-            await message.bot.send_message(message.from_user.id, text, reply_markup=inline_keyboard)
-    else:
-        await message.bot.send_message(message.from_user.id, "У вас нет активных игр")
+                await message.bot.send_message(message.from_user.id, text, reply_markup=inline_keyboard)
+        else:
+            await message.bot.send_message(message.from_user.id, "У вас нет активных игр")
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e}")
 
 
 async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
@@ -60,16 +62,16 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
     court = await Court.objects.aget(id=event.court_id)
     player = await Player.objects.aget(tg_id=callback_query.from_user.id)
 
-    date_time, start_time = event.start_date.strftime("%d-%m-%Y %H:%M").rsplit()
-    end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()[1]
+    date_time, start_time = event.start_date.strftime("%d.%m.%Y %H:%M").rsplit()
+    end_time = event.end_date.strftime("%Y.%m.%d %H:%M").split()[1]
 
     if player.tg_username:
         message_text = f"Игрок - <a href='https://telegram.me/{player.tg_username}'>{player.name}</a> отменил(a) игру на {court}e\n" \
-                       f"Дата: {date_time.replace('-', '.')}\n" \
+                       f"Дата: {date_time}\n" \
                        f"Время: {start_time} - {end_time}"
     else:
         message_text = f"Игрок - {player.name} отменил(a) игру на {court}e\n" \
-                       f"Дата: {date_time.replace('-', '.')}\n" \
+                       f"Дата: {date_time}\n" \
                        f"Время: {start_time} - {end_time}"
 
     if event.start_date < datetime.now():
@@ -87,18 +89,18 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
 
 
 async def all_events(message: types.Message, state: FSMContext):
-    calendar = SimpleCalendar()
-    tg_username = await get_player_tg_username(message)
+    try:
+        calendar = SimpleCalendar()
+        tg_username = await get_player_tg_username(message)
 
-    await state.set_state(EventState.select_all_events_date)
-    await message.answer(
-        "Выберите дату:",
-        reply_markup=await calendar.start_calendar()
-    )
+        await state.set_state(EventState.select_all_events_date)
+        await message.answer(
+            "Выберите дату:",
+            reply_markup=await calendar.start_calendar()
+        )
 
-
-# async def select_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
-#     calendar = SimpleCalendar()
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при отмене игры. Попробуйте позже. {e}")
 
 
 async def select_all_events_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
@@ -110,13 +112,11 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
         if not today <= date.date() <= next_week:
             await callback_query.message.answer(
                 f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
-            # await state.set_state(EventState.select_court)
             await all_events(callback_query.message, state)
         else:
             await callback_query.message.answer(f"Вы выбрали дату: {date.strftime('%d.%m.%Y')}")
 
             courts = await sync_to_async(Court.objects.all)()
-            # courts =  courts
 
             result = []
             text = ''
@@ -161,32 +161,6 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
             await callback_query.message.answer(f'<b>Расписание игр на {date.strftime("%d.%m.%Y")}:</b>\n\n'
                                                 f'{text}', disable_web_page_preview=True)
 
-            # await callback_query.message.answer("Все игры:")
-
-            # if not response:
-            #     await callback_query.message.answer("В этот день нет активных игр")
-            #     await main_menu(callback_query.message)
-
-            # for event in response:
-            #     date, start_time = event['start_date'].split()
-            #     _, end_time = event['end_date'].split()
-            #
-            #     text = (f"Дата: {date}\n"
-            #             f"Время: {start_time} - {end_time}\n"
-            #             f"Корт: {event['_court']}\n")
-            #
-            #     await callback_query.message.answer(text)
-    #
-    # else:
-    #     await callback_query.message.answer("Произошла ошибка при получении данных. Попробуйте позже.")
-
-
-# async def create_event(message: types.Message):
-#     today = datetime.now().date()
-#     next_week = today + timedelta(days=7)
-#     calendar, step = DetailedTelegramCalendar(min_date=today, max_date=next_week).build()
-#     calendar = json.loads(calendar)
-#     await message.bot.send_message(message.from_user.id, "Выберите дату", reply_markup=calendar)
 
 async def create_event(message: types.Message, state: FSMContext):
     try:
@@ -235,32 +209,36 @@ async def select_date(message: types.Message, state: FSMContext):
 
 
 async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
-    state_data = await state.get_data()
-    calendar = SimpleCalendar()
-    selected, date = await calendar.process_selection(callback_query, callback_data)
-    if selected:
-        today = datetime.now().date()
-        next_week = today + timedelta(days=7)
-        if not today <= date.date() <= next_week:
-            await callback_query.message.answer(
-                f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
-            # await state.set_state(EventState.select_court)
-            await create_event(callback_query.message, state)
-        elif await is_user_limit_expired(callback_query.from_user.id, date):
-            await callback_query.message.answer(
-                "Превышен лимит ваших игр на этой неделе."
-            )
-            return await main_menu(callback_query.message)
-        else:
-            date = date.strftime('%d.%m.%Y')
-            await callback_query.message.answer(f"Вы выбрали дату: {date}")
+    try:
+        state_data = await state.get_data()
+        calendar = SimpleCalendar()
+        selected, date = await calendar.process_selection(callback_query, callback_data)
+        if selected:
+            today = datetime.now().date()
+            next_week = today + timedelta(days=7)
+            if not today <= date.date() <= next_week:
+                await callback_query.message.answer(
+                    f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
+                # await state.set_state(EventState.select_court)
+                await create_event(callback_query.message, state)
+            elif await is_user_limit_expired(callback_query.from_user.id, date):
+                await callback_query.message.answer(
+                    "Превышен лимит ваших игр на этой неделе."
+                )
+                return await main_menu(callback_query.message)
+            else:
+                date = date.strftime('%d.%m.%Y')
+                await callback_query.message.answer(f"Вы выбрали дату: {date}")
 
-            state_data = await state.get_data()
-            state_data['selected_date'] = date
-            await state.set_data(state_data)
+                state_data = await state.get_data()
+                state_data['selected_date'] = date
+                await state.set_data(state_data)
 
-            await state.set_state(EventState.select_start_time)
-            await set_start_time(callback_query, state)
+                await state.set_state(EventState.select_start_time)
+                await set_start_time(callback_query, state)
+
+    except Exception as e:
+        await callback_query.message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e}")
 
 
 async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext):
@@ -303,8 +281,9 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
         await callback_query.message.answer(f"Доступное время начало игры:\n"
                                             f"\n"
-                                            f"Окончание игры необходимимо выбрать из окна со врменем ниже под названием - Доступное время для завершения:\n"
-                                            f"Оно появится после выбора времени начала", reply_markup=inlined_date)
+                                            f"Окончание игры необходимимо выбрать из окна со врменем ниже под названием "
+                                            f"- Доступное время для завершения:\n"
+                                            f"Оно появится после выбора времени начала игры", reply_markup=inlined_date)
 
         await state.set_state(EventState.select_end_time)
 
@@ -318,7 +297,6 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
     start_time = callback_query.data
 
     if start_time != ' ':
-        # await callback_query.message.answer(f"Вы выбрали время {start_time}")
 
         state_data['start_time'] = start_time
         await state.set_data(state_data)
@@ -335,8 +313,6 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
             current_time += timedelta(minutes=15)
             available_periods.append(current_time.strftime("%H:%M"))
 
-        # user_data['available_periods'] = available_periods
-
         inlined_date = get_available_periods_keyboard(available_periods)
         await callback_query.bot.edit_message_text(chat_id=callback_query.message.chat.id,
                                                    message_id=callback_query.message.message_id,
@@ -346,12 +322,13 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
         await callback_query.bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
                                                            message_id=callback_query.message.message_id,
                                                            reply_markup=inlined_date)
-        # await callback_query.message.(f"Доступное время для завершения:\n", reply_markup=inlined_date)
 
         await state.set_state(EventState.create_event)
 
 
 async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
+    await callback_query.bot.delete_message(chat_id=callback_query.message.chat.id,
+                                            message_id=callback_query.message.message_id)
     state_data = await state.get_data()
 
     state_data['end_time'] = callback_query.data
@@ -369,35 +346,25 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
             court_id=state_data['selected_court'],
             player_id=state_data['id']
         )
-        # event = requests.post('http://127.0.0.1:8000/api/events/', data={
-        #   'start_date': start_date,
-        #  'end_date': end_date,
-        # 'court': state_data['selected_court'],
-        # 'player': state_data['id']
-        # })
 
         if event:
-            await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт\n"
+            await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт.\n"
                                                 f"Дата: {state_data['selected_date']}\n"
                                                 f"Время начала: {state_data['start_time']}\n"
                                                 f"Время окончания: {state_data['end_time']}\n"
-                                                "Хорошей игры!")
+                                                "Хорошей игры!💥\n"
+                                                "\n"
+                                                "Вернуться в главное меню - /start\n"
+                                                "\n"
+                                                "Ознакомитсья с правилами - /help\n"
+                                                "\n"
+                                                "<b>Большая просьба - Если не получается придти в записанное время, "
+                                                "пожалуйста, старайтесь отменять игры заранее!🙌 "
+                                                "Все участники сообщества будут вам признательны☺!</b>\n"
+                                                )
 
         await state.set_state()
 
-        await main_menu(callback_query.message)
+    # await main_menu(callback_query.message)
     except Exception as e:
         await callback_query.message.answer(f"Произошла ошибка при создании события. Попробуйте позже. {e}")
-
-# async def cal(c: types.CallbackQuery):
-#     result, key, step = DetailedTelegramCalendar().process(c.data)
-#     if not result and key:
-#         key = json.loads(key)
-#         await c.message.bot.edit_message_text(f"Select {LSTEP[step]}",
-#                                             c.message.chat.id,
-#                                             c.message.message_id,
-#                                             reply_markup=key)
-#     elif result:
-#         await c.message.bot.edit_message_text(f"You selected {result}",
-#                                             c.message.chat.id,
-#                                             c.message.message_id)

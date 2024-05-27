@@ -29,7 +29,7 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['84.247.164.187']
 
 # Application definition
 
@@ -140,5 +140,7 @@ SPECTACULAR_SETTINGS = {
         'deepLinking': True,
     },
     'SERVE_INCLUDE_SCHEMA': True,
-    # OTHER SETTINGS
 }
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = ["*"]
+CSRF_TRUSTED_ORIGINS = ["*"]
