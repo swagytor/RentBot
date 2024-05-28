@@ -62,7 +62,7 @@ async def main_menu(message: types.Message):
                          "\n"
                          "Ребята всем привет! 👋, плиизз🙌))\n"
                          "Прочтите краткие инструкции\правила, вы их сможете найти нажав на кнопку --> /help "
-                         ", если уже со всем ознокомились нажмите кнопку --> /start 😇\n",
+                         ", если уже со всем ознакомились нажмите кнопку --> /start 😇\n",
                          reply_markup=basic.main_menu_keyboard)
 
 
@@ -89,9 +89,3 @@ async def get_player_tg_username(message: types.Message):
         await player.asave()
 
     return message.from_user.username
-
-# async def test(message: types.Message):
-#     calendar = CustomCalendar()
-#     calendar = await calendar.start_calendar()
-#
-#     await message.answer("Выберите дату:", reply_markup=calendar)

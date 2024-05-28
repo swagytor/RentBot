@@ -91,7 +91,8 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
 async def all_events(message: types.Message, state: FSMContext):
     try:
         calendar = SimpleCalendar()
-        tg_username = await get_player_tg_username(message)
+        if not message.from_user.is_bot:
+            tg_username = await get_player_tg_username(message)
 
         await state.set_state(EventState.select_all_events_date)
         await message.answer(
@@ -100,7 +101,7 @@ async def all_events(message: types.Message, state: FSMContext):
         )
 
     except Exception as e:
-        await message.answer(f"Произошла ошибка при отмене игры. Попробуйте позже. {e}")
+        await message.answer(f"Произошла ошибка при отмене игры. Попробуйте позже. {e} - all_events")
 
 
 async def select_all_events_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
@@ -166,7 +167,8 @@ async def create_event(message: types.Message, state: FSMContext):
     try:
         state_data = await state.get_data()
         courts = await sync_to_async(Court.objects.all)()
-        tg_username = await get_player_tg_username(message)
+        if not message.from_user.is_bot:
+            tg_username = await get_player_tg_username(message)
 
         keyboard = await get_court_keyboard(courts)
 
@@ -174,16 +176,15 @@ async def create_event(message: types.Message, state: FSMContext):
         await state.set_state(EventState.select_court)
 
     except Exception as e:
-        await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e}")
+        await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e} - create_event")
 
 
 async def select_date(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
     try:
         if message.text == 'Назад':
-            await message.answer(f'Вы вернулись в главное меню - нажмите /start или /help',
-                                 reply_markup=types.ReplyKeyboardRemove())
             await state.set_state(EventState.main_menu)
+            return await main_menu(message)
         else:
             court = await Court.objects.aget(title=message.text)
             await message.answer(
@@ -191,21 +192,27 @@ async def select_date(message: types.Message, state: FSMContext):
                 reply_markup=types.ReplyKeyboardRemove()
             )
 
-            state_data['selected_court'] = court.id
-            await state.set_data(state_data)
-
-            calendar = SimpleCalendar()
-
-            await state.set_state(EventState.select_date)
-            await message.answer(
-                "Выберите дату:",
-                reply_markup=await calendar.start_calendar()
-            )
+        state_data['selected_court'] = court.id
+        await state.set_data(state_data)
+        return await draw_calendar(message, state)
 
 
     except Court.DoesNotExist:
         await state.set_state(None)
         await message.answer("Выберите корт из списка")
+
+
+async def draw_calendar(message: types.Message, state: FSMContext):
+    try:
+        await state.set_state(EventState.select_date)
+        calendar = SimpleCalendar()
+        await message.answer(
+            "Выберите дату:\n"
+            "Вернуться в главное меню - /start",
+            reply_markup=await calendar.start_calendar()
+        )
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e} - draw_calendar")
 
 
 async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackData, state: FSMContext):
@@ -217,18 +224,18 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
             today = datetime.now().date()
             next_week = today + timedelta(days=7)
             if not today <= date.date() <= next_week:
-                await callback_query.message.answer(
+                await callback_query.message.reply(
                     f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
                 # await state.set_state(EventState.select_court)
                 await create_event(callback_query.message, state)
             elif await is_user_limit_expired(callback_query.from_user.id, date):
-                await callback_query.message.answer(
+                await callback_query.message.reply(
                     "Превышен лимит ваших игр на этой неделе."
                 )
                 return await main_menu(callback_query.message)
             else:
                 date = date.strftime('%d.%m.%Y')
-                await callback_query.message.answer(f"Вы выбрали дату: {date}")
+                await callback_query.message.reply(f"Вы выбрали дату: {date}")
 
                 state_data = await state.get_data()
                 state_data['selected_date'] = date
@@ -236,6 +243,7 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
 
                 await state.set_state(EventState.select_start_time)
                 await set_start_time(callback_query, state)
+
 
     except Exception as e:
         await callback_query.message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e}")
@@ -293,6 +301,11 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
 
 async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext):
+    if callback_query.data == 'Назад':
+        await callback_query.bot.delete_message(chat_id=callback_query.message.chat.id,
+                                                message_id=callback_query.message.message_id)
+        await state.set_state(EventState.select_date)
+        return await draw_calendar(callback_query.message, state)
     state_data = await state.get_data()
     start_time = callback_query.data
 
@@ -327,44 +340,49 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
 
 
 async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.bot.delete_message(chat_id=callback_query.message.chat.id,
-                                            message_id=callback_query.message.message_id)
-    state_data = await state.get_data()
+    if callback_query.data == 'Назад':
+        await callback_query.bot.delete_message(chat_id=callback_query.message.chat.id,
+                                                message_id=callback_query.message.message_id)
+        await state.set_state(EventState.select_start_time)
+        await set_start_time(callback_query, state)
+    else:
+        await callback_query.bot.delete_message(chat_id=callback_query.message.chat.id,
+                                                message_id=callback_query.message.message_id)
+        state_data = await state.get_data()
 
-    state_data['end_time'] = callback_query.data
-    date = datetime.strptime(state_data['selected_date'], '%d.%m.%Y')
-    start_time = datetime.strptime(state_data['start_time'], "%H:%M")
-    end_time = datetime.strptime(callback_query.data, "%H:%M")
+        state_data['end_time'] = callback_query.data
+        date = datetime.strptime(state_data['selected_date'], '%d.%m.%Y')
+        start_time = datetime.strptime(state_data['start_time'], "%H:%M")
+        end_time = datetime.strptime(callback_query.data, "%H:%M")
 
-    start_date = date.replace(hour=start_time.hour, minute=start_time.minute, second=0, microsecond=0)
-    end_date = date.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0)
+        start_date = date.replace(hour=start_time.hour, minute=start_time.minute, second=0, microsecond=0)
+        end_date = date.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0)
 
-    try:
-        event = await Event.objects.acreate(
-            start_date=start_date,
-            end_date=end_date,
-            court_id=state_data['selected_court'],
-            player_id=state_data['id']
-        )
+        try:
+            event = await Event.objects.acreate(
+                start_date=start_date,
+                end_date=end_date,
+                court_id=state_data['selected_court'],
+                player_id=state_data['id']
+            )
 
-        if event:
-            await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт.\n"
-                                                f"Дата: {state_data['selected_date']}\n"
-                                                f"Время начала: {state_data['start_time']}\n"
-                                                f"Время окончания: {state_data['end_time']}\n"
-                                                "Хорошей игры!💥\n"
-                                                "\n"
-                                                "Вернуться в главное меню - /start\n"
-                                                "\n"
-                                                "Ознакомитсья с правилами - /help\n"
-                                                "\n"
-                                                "<b>Большая просьба - Если не получается придти в записанное время, "
-                                                "пожалуйста, старайтесь отменять игры заранее!🙌 "
-                                                "Все участники сообщества будут вам признательны☺!</b>\n"
-                                                )
+            if event:
+                await callback_query.message.answer(f"Вы записались на {state_data['selected_court']} корт.\n"
+                                                    f"Дата: {state_data['selected_date']}\n"
+                                                    f"Время начала: {state_data['start_time']}\n"
+                                                    f"Время окончания: {state_data['end_time']}\n"
+                                                    "Хорошей игры!💥\n"
+                                                    "\n"
+                                                    "Вернуться в главное меню - /start\n"
+                                                    "\n"
+                                                    "Ознакомиться с правилами - /help\n"
+                                                    "\n"
+                                                    "<b>Большая просьба - Если не получается придти в записанное время, "
+                                                    "пожалуйста, старайтесь отменять игры заранее!🙌 "
+                                                    "Все участники сообщества будут вам признательны☺!</b>\n"
+                                                    )
 
-        await state.set_state()
+            await state.set_state()
 
-    # await main_menu(callback_query.message)
-    except Exception as e:
-        await callback_query.message.answer(f"Произошла ошибка при создании события. Попробуйте позже. {e}")
+        except Exception as e:
+            await callback_query.message.answer(f"Произошла ошибка при создании события. Попробуйте позже. {e}")

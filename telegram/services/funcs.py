@@ -22,8 +22,7 @@ def get_user_state_data(state_data, tg_id):
 
 
 async def get_court_keyboard(courts):
-    keyboard = types.ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True, one_time_keyboard=True,
-                                         input_field_placeholder="Выберите Корт", selective=True)
+    keyboard = types.ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True, one_time_keyboard=True, selective=True)
 
     async for court in courts:
         keyboard.keyboard.append([types.KeyboardButton(text=court.title)])
@@ -94,6 +93,7 @@ def get_inlined_date_keyboard(times, start_time='07:00'):
 
         keyboard.inline_keyboard.append(buttons)
 
+    keyboard.inline_keyboard.append([types.InlineKeyboardButton(text="Назад", callback_data="Назад")])
     return keyboard
 
 
@@ -107,6 +107,7 @@ def get_available_periods_keyboard(times):
 
         keyboard.inline_keyboard.append(buttons)
 
+    keyboard.inline_keyboard.append([types.InlineKeyboardButton(text="Назад", callback_data="Назад")])
     return keyboard
 
 
