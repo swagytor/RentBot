@@ -10,7 +10,7 @@ from events.models import Event
 from players.models import Player
 from telegram.handlers.basic import main_menu, get_player_tg_username
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
-    get_available_periods_keyboard, is_user_limit_expired
+    get_available_periods_keyboard, is_user_limit_expired, weekend_limit
 from telegram.states.events import EventState
 
 
@@ -233,6 +233,11 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
                     "Превышен лимит ваших игр на этой неделе."
                 )
                 return await main_menu(callback_query.message)
+            elif await weekend_limit(callback_query.from_user.id, date):
+                await callback_query.message.reply(
+                    "Превышен лимит ваших игр в выходные. "
+                )
+                return await main_menu(callback_query.message)
             else:
                 date = date.strftime('%d.%m.%Y')
                 await callback_query.message.reply(f"Вы выбрали дату: {date}")
@@ -256,7 +261,7 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
     start_period = date.replace(hour=7, minute=0, second=0, microsecond=0)
     end_period = date.replace(hour=23, minute=0, second=0, microsecond=0)
-    interval = timedelta(minutes=15)
+    interval = timedelta(minutes=30)
 
     date_periods = []
     current_time = start_period
@@ -287,11 +292,7 @@ async def set_start_time(callback_query: types.CallbackQuery, state: FSMContext)
 
         inlined_date = get_inlined_date_keyboard(sorted_events)
 
-        await callback_query.message.answer(f"Доступное время начало игры:\n"
-                                            f"\n"
-                                            f"Окончание игры необходимимо выбрать из окна со врменем ниже под названием "
-                                            f"- Доступное время для завершения:\n"
-                                            f"Оно появится после выбора времени начала игры", reply_markup=inlined_date)
+        await callback_query.message.answer(f"Доступное время начало игры:\n", reply_markup=inlined_date)
 
         await state.set_state(EventState.select_end_time)
 
@@ -323,14 +324,14 @@ async def select_end_time(callback_query: types.CallbackQuery, state: FSMContext
         current_time = datetime.strptime(start_time, "%H:%M")
 
         while current_time < max_time:
-            current_time += timedelta(minutes=15)
+            current_time += timedelta(minutes=30)
             available_periods.append(current_time.strftime("%H:%M"))
 
         inlined_date = get_available_periods_keyboard(available_periods)
         await callback_query.bot.edit_message_text(chat_id=callback_query.message.chat.id,
                                                    message_id=callback_query.message.message_id,
                                                    text=f"Вы выбрали время начала игры: {start_time}\n"
-                                                        f"Доступное время для завершения:")
+                                                        f"Доступное время для завершения игры:")
 
         await callback_query.bot.edit_message_reply_markup(chat_id=callback_query.message.chat.id,
                                                            message_id=callback_query.message.message_id,

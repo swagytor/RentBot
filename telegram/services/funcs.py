@@ -36,7 +36,7 @@ def get_event_duration(start, end):
 
     while start < end:
         result.append(start.strftime("%H:%M"))
-        start += timedelta(minutes=15)
+        start += timedelta(minutes=30)
 
     return result
 
@@ -50,7 +50,7 @@ def get_max_duration(selected_time, time_list, is_weekend, start_time):
         max_time = selected_time + timedelta(hours=1.5)
     else:
         max_time = selected_time + timedelta(hours=2)
-    selected_time += timedelta(minutes=15)
+    selected_time += timedelta(minutes=30)
 
     for time in time_list:
         time = datetime.strptime(time, "%H:%M")
@@ -60,7 +60,7 @@ def get_max_duration(selected_time, time_list, is_weekend, start_time):
         elif time < selected_time:
             continue
         elif time == selected_time:
-            selected_time += timedelta(minutes=15)
+            selected_time += timedelta(minutes=30)
 
     return selected_time
 
@@ -74,11 +74,11 @@ def get_inlined_date_keyboard(times, start_time='07:00'):
 
         while current_time < time:
             result.append(' ')
-            current_time += timedelta(minutes=15)
+            current_time += timedelta(minutes=30)
 
         if current_time == time:
             result.append(time.strftime("%H:%M"))
-            current_time += timedelta(minutes=15)
+            current_time += timedelta(minutes=30)
         else:
             result.append(' ')
 
@@ -123,3 +123,11 @@ def is_user_limit_expired(tg_id, date):
     events = Event.objects.filter(player__tg_id=tg_id, start_date__range=[start_week, end_week])
 
     return events.count() >= 2
+
+
+@sync_to_async
+def weekend_limit(tg_id, date):
+
+    if date.weekday() in [5, 6]:
+        events_on_day = Event.objects.filter(player__tg_id=tg_id, start_date__date=date)
+        return events_on_day.count() > 0
