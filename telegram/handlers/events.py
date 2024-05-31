@@ -17,19 +17,6 @@ from telegram.states.events import EventState
 async def my_events(message: types.Message):
     try:
         tg_username = await get_player_tg_username(message)
-        # response = requests.get('http://127.0.0.1:8000/api/events/my_events/',
-        #                         params={'tg_id': message.from_user.id,
-        #                                 'ordering': 'start_date'})
-        #
-        # if response.status_code == 200:
-        #     response = response.json()
-        #
-        #     if response:
-        #         await message.bot.send_message(message.from_user.id, "Ваши игры:")
-        #
-        #         for event in response:
-        #             date, start_time = event['start_date'].split()
-        #             _, end_time = event['end_date'].split()
         events = await sync_to_async(Event.objects.filter)(
             player__tg_id=message.from_user.id,
             end_date__gte=datetime.now()
@@ -80,12 +67,17 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
 
     try:
         await sync_to_async(event.delete)()
-        await callback_query.message.answer("Игра отменена")
+        await callback_query.message.answer(f"<b>Игра отменена</b>:\n"
+                                            f"Дата: {date_time}\n"
+                                            f"Время: {start_time} - {end_time}\n"
+                                            f"Корт: {court.id}\n"
+                                            f"\n"
+                                            f"Вернуться в главное меню - /start")
         await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255, disable_web_page_preview=True)
     except Exception as e:
-        await callback_query.message.answer("Произошла ошибка при отмене игры. Попробуйте позже.")
+        await callback_query.message.answer(f"Произошла ошибка при отмене игры. Попробуйте позже. {e}")
 
-    await main_menu(callback_query.message)
+    # await main_menu(callback_query.message)
 
 
 async def all_events(message: types.Message, state: FSMContext):
@@ -135,20 +127,6 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
                         _, start_time = event.start_date.strftime("%d-%m-%Y %H:%M").rsplit()
                         _, end_time = event.end_date.strftime("%Y-%m-%d %H:%M").split()
                         player_id = event.player_id
-                        # response = requests.get('http://127.0.0.1:8000/api/events/',
-                        #                         params={
-                        #                             'start_date': f'{date.strftime("%Y-%m-%d")}',
-                        #                             'court': court.id,
-                        #                             'ordering': 'start_date'
-                        #                         })
-                        #
-                        # if response.status_code == 200:
-                        #     if response.json():
-                        #         for event in response.json():
-                        #             _, start_time = event['start_date'].split()
-                        #             _, end_time = event['end_date'].split()
-                        #
-                        #             player_id = event['player']
                         player = await Player.objects.aget(id=player_id)
                         if player.tg_username:
                             text += f"{start_time}-{end_time} <a href='https://telegram.me/{player.tg_username}'>{player.name}</a> \n"
