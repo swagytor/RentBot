@@ -183,11 +183,14 @@ async def select_date(message: types.Message, state: FSMContext):
 async def draw_calendar(message: types.Message, state: FSMContext):
     try:
         await state.set_state(EventState.select_date)
+        current_month = datetime.now().month
+        current_year = datetime.now().year
         calendar = SimpleCalendar()
+
         await message.answer(
             "Выберите дату:\n"
             "Вернуться в главное меню - /start",
-            reply_markup=await calendar.start_calendar()
+            reply_markup=await calendar.start_calendar(year=current_year,month=current_month)
         )
     except Exception as e:
         await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e} - draw_calendar")
