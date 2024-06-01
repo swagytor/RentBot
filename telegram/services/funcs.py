@@ -115,7 +115,7 @@ def get_available_periods_keyboard(times):
 def is_user_limit_expired(tg_id, date):
     player = Player.objects.get(tg_id=tg_id)
 
-    if player.is_premium or player.name == 'Vitaly No one':
+    if player.is_premium or player.name == 'Vitaly No one' or player.name == 'Anna':
         return False
 
     start_week = date - timedelta(days=date.weekday())
