@@ -58,10 +58,11 @@ async def start():
     dp.callback_query.register(events.select_all_events_date, EventState.select_all_events_date,
                                SimpleCalendarCallback.filter())
 
-    dp.message.register(events.create_event, F.text == '🎾Записаться🎾', F.chat.type == 'private')
-    dp.message.register(events.select_date, EventState.select_court)
+    dp.message.register(events.draw_calendar, F.text == '🎾Записаться🎾', F.chat.type == 'private')
     dp.callback_query.register(events.set_date, EventState.select_date, SimpleCalendarCallback.filter())
-    dp.callback_query.register(events.set_start_time, EventState.select_start_time)
+    dp.message.register(events.create_court, EventState.select_court)
+    dp.message.register(events.select_court, EventState.set_court)
+    dp.message.register(events.set_start_time, EventState.select_start_time)
     dp.callback_query.register(events.select_end_time, EventState.select_end_time)
     dp.callback_query.register(events.confirm_event, EventState.create_event)
 
