@@ -102,7 +102,7 @@ async def select_all_events_date(callback_query: types.CallbackQuery, callback_d
     if selected:
         today = datetime.now().date()
         next_week = today + timedelta(days=7)
-        if not today <= date.date() <= next_week:
+        if not today <= date.date() <= next_week and callback_query.from_user.username != "Vital0077":
             await callback_query.message.answer(
                 f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
             await all_events(callback_query.message, state)
@@ -151,7 +151,7 @@ async def draw_calendar(message: types.Message, state: FSMContext):
         await message.answer(
             "Выберите дату:\n"
             "Вернуться в главное меню - /start",
-            reply_markup=await calendar.start_calendar(year=current_year,month=current_month)
+            reply_markup=await calendar.start_calendar(year=current_year, month=current_month)
         )
     except Exception as e:
         await message.answer(f"Произошла ошибка при получении данных. Попробуйте позже. {e} - draw_calendar")
@@ -165,7 +165,7 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
         if selected:
             today = datetime.now().date()
             next_week = today + timedelta(days=7)
-            if not today <= date.date() <= next_week:
+            if not today <= date.date() <= next_week and callback_query.from_user.username != "Vital0077":
                 await callback_query.message.reply(
                     f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
                 # await state.set_state(EventState.select_court)
