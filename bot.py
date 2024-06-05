@@ -51,6 +51,8 @@ async def start():
 
     dp.message.register(events.my_events, F.text == "⚔Мои игры⚔", F.chat.type == 'private')
 
+    dp.message.register(basic.get_donate, F.text == "❤Поддержать разработчиков❤", F.chat.type == 'private')
+
     dp.callback_query.register(events.cancel_event, F.data.startswith('cancel_event'))
 
     dp.message.register(events.all_events, F.text == '📜Все игры📜', F.chat.type == 'private')
