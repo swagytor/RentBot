@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 from courts.models import Court
 from events.models import Event
 from players.models import Player
+from telegram.buttons import basic
 from telegram.handlers.basic import main_menu, get_player_tg_username
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
     get_available_periods_keyboard, is_user_limit_expired, weekend_limit
@@ -71,8 +72,8 @@ async def cancel_event(callback_query: types.CallbackQuery, bot: Bot):
                                             f"Дата: {date_time}\n"
                                             f"Время: {start_time} - {end_time}\n"
                                             f"Корт: {court.id}\n"
-                                            f"\n"
-                                            f"Вернуться в главное меню - /start")
+                                            , reply_markup=basic.start_button)
+
         await bot.send_message(-1001599764524, message_text, reply_to_message_id=14255, disable_web_page_preview=True)
     except Exception as e:
         await callback_query.message.answer(f"Произошла ошибка при отмене игры. Попробуйте позже. {e}")
@@ -88,7 +89,8 @@ async def all_events(message: types.Message, state: FSMContext):
 
         await state.set_state(EventState.select_all_events_date)
         await message.answer(
-            "Выберите дату:",
+            "Выберите дату:\n"
+            "Вернуться в главное меню - /start",
             reply_markup=await calendar.start_calendar()
         )
 
@@ -168,7 +170,6 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
             if not today <= date.date() <= next_week and callback_query.from_user.username != "Vital0077":
                 await callback_query.message.reply(
                     f"Укажите дату между {today.strftime('%d.%m.%Y')} и {next_week.strftime('%d.%m.%Y')}")
-                # await state.set_state(EventState.select_court)
                 await draw_calendar(callback_query.message, state)
             elif await is_user_limit_expired(callback_query.from_user.id, date):
                 await callback_query.message.reply(
@@ -356,13 +357,10 @@ async def confirm_event(callback_query: types.CallbackQuery, state: FSMContext):
                                                     f"Время окончания: {state_data['end_time']}\n"
                                                     "Хорошей игры!💥\n"
                                                     "\n"
-                                                    "Вернуться в главное меню - /start\n"
-                                                    "\n"
-                                                    "Ознакомиться с правилами - /help\n"
-                                                    "\n"
                                                     "<b>Большая просьба - Если не получается придти в записанное время, "
                                                     "пожалуйста, старайтесь отменять игры заранее!🙌 "
-                                                    "Все участники сообщества будут вам признательны☺!</b>\n"
+                                                    "Все участники сообщества будут вам признательны☺!</b>\n",
+                                                    reply_markup=basic.start_button
                                                     )
 
             await state.set_state()

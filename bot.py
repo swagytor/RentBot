@@ -34,20 +34,20 @@ async def start():
     dp.message.register(basic.redirect_to_bot, F.chat.type != 'private', CommandStart())
 
     dp.message.register(basic.redirect_to_bot, F.chat.type != 'private',
-                        F.text.in_(['Главное меню', '⚔Мои игры⚔', '📜Все игры📜', '🎾Записаться🎾']))
+                        F.text.in_(['В Главное меню', '⚔Мои игры⚔', '📜Все игры📜', '🎾Записаться🎾']))
 
     dp.callback_query.register(basic.redirect_to_bot_callback, F.state == '*', F.chat.type != 'private')
 
     dp.message.register(basic.start, CommandStart())
 
     dp.message.register(basic.about, F.text == "/help")
-    dp.message.register(basic.main_menu, F.text == "Главное меню", F.chat.type == 'private')
+    dp.message.register(basic.main_menu, F.text == "🔙В Главное меню🔙", F.chat.type == 'private')
 
     dp.message.register(registration.start_register, RegistrationsState.start)
     dp.message.register(registration.set_name, RegistrationsState.name)
     dp.message.register(registration.set_ntrp, RegistrationsState.ntrp)
 
-    dp.message.register(basic.main_menu, F.text == "Главное меню", F.chat.type == 'private')
+    dp.message.register(basic.main_menu, F.text == "🔙В Главное меню🔙", F.chat.type == 'private')
 
     dp.message.register(events.my_events, F.text == "⚔Мои игры⚔", F.chat.type == 'private')
 

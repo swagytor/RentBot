@@ -26,3 +26,9 @@ main_menu_keyboard_admin = types.ReplyKeyboardMarkup(keyboard=[
         types.KeyboardButton(text="📜Все игры📜"),
     ]
 ], resize_keyboard=True)
+
+start_button = types.ReplyKeyboardMarkup(keyboard=[
+    [
+        types.KeyboardButton(text="🔙В Главное меню🔙"),
+    ]
+], resize_keyboard=True)
