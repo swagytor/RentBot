@@ -54,9 +54,8 @@ async def about(message: types.Message):
                          "\n"
                          "Супер! Спасибо, что прочитал и Хорошей игры!😍))\n"
                          "\n"
-                         "А, чуть не забыл - Записаться на корт можно во вкладке - 🎾Записаться!🎾\n"
-                         "\n"
-                         "Вернуться в главное меню - /start")
+                         "А, чуть не забыл - Записаться на корт можно во вкладке - 🎾Записаться!🎾\n",
+                         reply_markup=basic.start_button)
 
 
 async def get_donate(message: types.Message):
@@ -68,7 +67,7 @@ async def get_donate(message: types.Message):
                          f"Но к сожалению, наш бот являлся временным решением и совсем скоро он будет отключён и его заменят другим ботом\n"
                          f"\n"
                          f"<b>Отдельное спасибо тем, кто активно делился своими отзывами и помогал нам улучшать его."
-                         f" Без вашей помощи этот бот не стал бы таким замечательным, каким он есть сейчас!</b> ❤❤️\n"
+                         f" Без вашей помощи этот бот не стал бы таким замечательным, какой он есть сейчас!</b> ❤❤️\n"
                          f"\n"
                          f"Если у вас возникнет желание поддержать наши усилия🙌, вы можете сделать перевод по номеру "
                          f"телефона:\n"
@@ -81,7 +80,8 @@ async def get_donate(message: types.Message):
                          f" с кем то он должен ими поделиться!))\n"
                          f"Или пару бургеров , чтобы просто заесть стресс 😋 ))\n"
                          f"\n"
-                         f"Спасибо вам за вашу верность и поддержку ! <b>Вы просто лучшие! </b>🌟")
+                         f"Спасибо вам за вашу верность и поддержку ! <b>Вы просто лучшие! </b>🌟",
+                         reply_markup=basic.start_button)
 
 
 async def main_menu(message: types.Message):
@@ -111,25 +111,33 @@ async def redirect_to_bot_callback(call: types.CallbackQuery, state: FSMContext)
 
 
 async def get_player_tg_username(message: types.Message):
-    tg_id = message.from_user.id
-    player = await Player.objects.aget(tg_id=tg_id)
+    try:
+        tg_id = message.from_user.id
+        player = await Player.objects.aget(tg_id=tg_id)
 
-    if not player.tg_username or player.tg_username != message.from_user.username:
-        player.tg_username = message.from_user.username
-        await player.asave()
+        if not player.tg_username or player.tg_username != message.from_user.username:
+            player.tg_username = message.from_user.username
+            await player.asave()
 
-    return message.from_user.username
+        return message.from_user.username
+
+    except Exception as e:
+        return f'{e}'
 
 
 async def admin_check(message: types.Message):
-    value = ''
-    black_list = [516193003, 6235948743, 1141462922, 177993974, 1072811071, 481600024,
-                  657946737, 202181776, 6386505711, 'kobax12', 'Рулон Обоев', 'Рон',
-                  'Телеграм', 'honor2906', 'Вера', 'Vera_Shuraits', 'slovsky', 'aposazhennikov']
-    if message.from_user.id:
-        value = message.from_user.id
-    elif message.from_user.username:
-        value = message.from_user.username
-    elif message.from_user.full_name:
-        value = message.from_user.full_name
-    return value in black_list
+    try:
+        value = ''
+        black_list = [516193003, 6235948743, 1141462922, 177993974, 1072811071, 481600024,
+                      657946737, 202181776, 6386505711, 'kobax12', 'Рулон Обоев', 'Рон',
+                      'Телеграм', 'honor2906', 'Вера', 'Vera_Shuraits', 'slovsky', 'aposazhennikov']
+        if message.from_user.id:
+            value = message.from_user.id
+        elif message.from_user.username:
+            value = message.from_user.username
+        elif message.from_user.full_name:
+            value = message.from_user.full_name
+        return value in black_list
+
+    except Exception as e:
+        return False
