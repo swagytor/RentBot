@@ -29,6 +29,10 @@ main_menu_keyboard_admin = types.ReplyKeyboardMarkup(keyboard=[
 
 start_button = types.ReplyKeyboardMarkup(keyboard=[
     [
+        types.KeyboardButton(text="❤Поддержать разработчиков❤")
+    ],
+    [
         types.KeyboardButton(text="🔙В Главное меню🔙"),
-    ]
+    ],
+
 ], resize_keyboard=True)

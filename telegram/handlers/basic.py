@@ -132,9 +132,7 @@ async def get_player_tg_username(message: types.Message):
 async def admin_check(message: types.Message):
     try:
         value = ''
-        black_list = [516193003, 6235948743, 1141462922, 177993974, 1072811071, 481600024,
-                      657946737, 202181776, 6386505711, 'kobax12', 'Рулон Обоев', 'Рон',
-                      'Телеграм', 'honor2906', 'Вера', 'Vera_Shuraits', 'slovsky', 'aposazhennikov']
+        black_list = ['MaN1Le', 'kobax12', 'Телеграм', 'Вера', 'Vera_Shuraits', 'slovsky', 'aposazhennikov', 'olegchj']
         if message.from_user.id:
             value = message.from_user.id
         elif message.from_user.username:

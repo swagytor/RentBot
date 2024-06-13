@@ -126,8 +126,7 @@ def is_user_limit_expired(tg_id, date):
 
 
 @sync_to_async
-def weekend_limit(tg_id, date):
+def day_limit(tg_id, date):
 
-    if date.weekday() in [5, 6]:
-        events_on_day = Event.objects.filter(player__tg_id=tg_id, start_date__date=date)
-        return events_on_day.count() > 0
+    events_on_day = Event.objects.filter(player__tg_id=tg_id, start_date__date=date)
+    return events_on_day.count() > 0
