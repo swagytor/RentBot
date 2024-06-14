@@ -11,7 +11,7 @@ from players.models import Player
 from telegram.buttons import basic
 from telegram.handlers.basic import main_menu, get_player_tg_username
 from telegram.services.funcs import get_event_duration, get_inlined_date_keyboard, get_court_keyboard, get_max_duration, \
-    get_available_periods_keyboard, is_user_limit_expired, day_limit
+    get_available_periods_keyboard, is_user_limit_expired, day_limit, black_list_check
 from telegram.states.events import EventState
 
 
@@ -179,6 +179,11 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
             elif await day_limit(callback_query.from_user.id, date):
                 await callback_query.message.reply(
                     "Превышен лимит ваших игр в один день. "
+                )
+                return await main_menu(callback_query.message)
+            elif await black_list_check(callback_query.from_user.id):
+                await callback_query.message.reply(
+                    "Вы нарушили правила сообщества, доступ ограничен. "
                 )
                 return await main_menu(callback_query.message)
             else:

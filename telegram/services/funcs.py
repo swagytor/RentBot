@@ -127,6 +127,11 @@ def is_user_limit_expired(tg_id, date):
 
 @sync_to_async
 def day_limit(tg_id, date):
-
     events_on_day = Event.objects.filter(player__tg_id=tg_id, start_date__date=date)
     return events_on_day.count() > 0
+
+
+@sync_to_async
+def black_list_check(tg_id):
+    black_list = [568341825, 'poteshkin']
+    return tg_id in black_list
