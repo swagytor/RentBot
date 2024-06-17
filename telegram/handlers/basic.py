@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from players.models import Player
 from telegram.buttons import basic
 from telegram.handlers.registration import start_register
+from telegram.services.funcs import black_list_check
 from telegram.states.registration import RegistrationsState
 
 
@@ -58,6 +59,33 @@ async def about(message: types.Message):
                          reply_markup=basic.start_button)
 
 
+async def get_tools(message: types.Message):
+    player = await Player.objects.aget(tg_id=415965166)
+    await message.answer("Всем привет👋! \n"
+                         "\n"
+                         "Если вы следите за ситуацей в чате овсянки то теперь любые боевики и остросюжетные триллеры вам наверное кажутся пресными и скучными😄\n"
+                         "\n"
+                         "Видимо корты на какое то время могут отстаться без сеток, что естественно не оч удобно, поэтому если у вас есть желание скинуться на сетки вы можете это сделать\n"
+                         "Но перед эти пару ОЧЕНЬ важных уточнений🤓:\n"
+                         "\n"
+                         "1. Дело это доровольное, никаких привилегий\ограничений, вы за это не получите, относитесь к этому как к донату😇\n"
+                         "\n"
+                         "2. Сетка\сетки будут общими, если эта мысль не даст вам спать по ночам, то советую вам воздержаться от доната😅\n"
+                         "\n"
+                         "3. Сумму донатов я буду обновлять тут раз в сутки\n"
+                         "\n"
+                         "Собранная сумма: 500р \n"
+                         "Необходимая сумма на две сетки - 9000р\n"
+                         "Осталлось собрать: 8500р\n"
+                         "\n"
+                         f"<b>8-904-647-20-73</b>\n"
+                         f"<b>Виталий Д.</b>, Тинькофф, Сбер.\n"
+                         f"\n"
+                         f"Если у вас есть какие то вопросы, пожелания, предложения или вы знаете где можно купить сетки дешевле или можете их установить, можете писать в лс "
+                         f"- <a href='https://telegram.me/{player.tg_username}'>{player.name}</a>\n",
+                         reply_markup=basic.start_button)
+
+
 async def get_donate(message: types.Message):
     player = await Player.objects.aget(tg_id=415965166)
     await message.answer(f"<b>Дорогие пользователи нашего бота!</b>\n"
@@ -89,13 +117,12 @@ async def get_donate(message: types.Message):
 
 
 async def main_menu(message: types.Message):
-    admin = await admin_check(message)
     text = "Вы в Главном меню\n" \
            "Ребята всем привет! 👋, плиизз🙌))\n" \
            "Прочтите краткие инструкции\правила, вы их сможете найти нажав на кнопку --> /help\n" \
            "Если уже со всем ознакомились нажмите кнопку --> /start 😇\n"
 
-    reply_markup = basic.main_menu_keyboard_admin if admin else basic.main_menu_keyboard_for_donate
+    reply_markup = basic.main_menu_keyboard_for_donate
 
     await message.answer(text, reply_markup=reply_markup)
 
@@ -128,18 +155,17 @@ async def get_player_tg_username(message: types.Message):
     except Exception as e:
         return f'{e}'
 
-
-async def admin_check(message: types.Message):
-    try:
-        value = ''
-        black_list = ['MaN1Le', 'kobax12', 'Телеграм', 'Вера', 'Vera_Shuraits', 'slovsky', 'aposazhennikov', 'olegchj']
-        if message.from_user.id:
-            value = message.from_user.id
-        elif message.from_user.username:
-            value = message.from_user.username
-        elif message.from_user.full_name:
-            value = message.from_user.full_name
-        return value in black_list
-
-    except Exception as e:
-        return False
+# async def admin_check(message: types.Message):
+#     try:
+#         value = ''
+#         black_list = ['MaN1Le', 'kobax12', 'Телеграм', 'Вера', 'Vera_Shuraits', 'slovsky', 'aposazhennikov', 'olegchj']
+#         if message.from_user.id:
+#             value = message.from_user.id
+#         elif message.from_user.username:
+#             value = message.from_user.username
+#         elif message.from_user.full_name:
+#             value = message.from_user.full_name
+#         return value in black_list
+#
+#     except Exception as e:
+#         return False
