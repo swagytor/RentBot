@@ -183,7 +183,7 @@ async def set_date(callback_query: types.CallbackQuery, callback_data: CallbackD
                 return await main_menu(callback_query.message)
             elif await black_list_check(callback_query.from_user.id):
                 await callback_query.message.reply(
-                    "Вы нарушили правила сообщества, доступ ограничен. "
+                    "Вы нарушили правила сообщества, доступ ограничен. по вопросам можете пистаь @Anna_K_1710"
                 )
                 return await main_menu(callback_query.message)
             else:

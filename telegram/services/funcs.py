@@ -133,5 +133,8 @@ def day_limit(tg_id, date):
 
 @sync_to_async
 def black_list_check(tg_id):
-    black_list = [568341825, 'poteshkin']
+    black_list = [568341825, 'poteshkin', 286762993]
     return tg_id in black_list
+
+
+#6386505711
